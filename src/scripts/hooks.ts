@@ -69,4 +69,4 @@ function createInteractivePathHtmlElement(id: string, path: string | undefined):
     return formGroup;
 }
 
-export * as register from './hooks-service';
+export * as register from './hooks';
