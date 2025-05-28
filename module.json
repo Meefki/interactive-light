@@ -1,0 +1,35 @@
+{
+  "id": "interactive-light",
+  "title": "Interactive Light",
+  "description": "<p>A simple module that allow you to add a bit interactive with light sources for your players</p>",
+  "authors": [
+    {
+      "name": "Meefki",
+      "flags": {}
+    }
+  ],
+  "version": "0.0.1",
+  "compatibility": {
+    "minimum": "10",
+    "verified": "13.344"
+  },
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "ru",
+      "name": "Русский",
+      "path": "lang/ru.json"
+    }
+  ],
+  "socket": true,
+  "esmodules": [
+    "dist/interactive-light.js"
+  ],
+  "url": "https://example.com",
+  "manifest": "modules/interactive-light/module.json",
+  "download": "https://example.com/download.zip"
+}

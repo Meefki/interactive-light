@@ -1,0 +1,5 @@
+{
+    "INTERACTIVE_LIGHT.Enabled": "Interactive light",
+    "INTERACTIVE_LIGHT.EnabledHint": "Indicates whether this light source can be toggled by players.",
+    "INTERACTIVE_LIGHT.Path": "Icon"
+}
