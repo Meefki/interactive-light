@@ -11,7 +11,7 @@ export enum LogLevels {
 }
 
 export class Logger {
-    public static minLogLevel: LogLevels = LogLevels.debug;
+    public static minLogLevel: LogLevels = LogLevels.warn;
 
     public static log(...object: any) {
         if (this.minLogLevel > LogLevels.debug) return;
