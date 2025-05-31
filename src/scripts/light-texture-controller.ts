@@ -1,7 +1,5 @@
-import { env } from "./constants/environment";
-import { flag, tokenId } from "./constants/flag";
+import { flag } from "./constants/flag";
 import { settings } from "./constants/settings";
-import { PermissionManager } from "./permission-manager";
 import { TokenInteractionManager } from "./token-interaction-manager";
 import { Logger } from "./utils/logger";
 
@@ -23,8 +21,7 @@ export class LightTextureController {
         }
 
         try {
-            if (env.debug)
-                Logger.log(`UPDATING TOKEN ${tokenId} TEXTURE SOURCE`);
+            Logger.log(`UPDATING TOKEN ${tokenId} TEXTURE SOURCE`);
 
             await token.document.update({
                 texture: { src: path },
@@ -60,8 +57,7 @@ export class LightTextureController {
                 if (actorId) {
                     const actor = game.actors?.get(actorId);
                     if (actor) {
-                        if (env.debug)
-                            Logger.log(`DELETING ASSOCIATED ACTOR: ${actorId}`);
+                        Logger.log(`DELETING ASSOCIATED ACTOR: ${actorId}`);
                         await actor.delete();
                     }
                 }
@@ -93,7 +89,6 @@ export class LightTextureController {
         y: number,
         ambientLightDoc: AmbientLightDocument
     ): Promise<TokenDocument | undefined> => {
-        if (!game.user?.isGM) return;
         if (!ambientLightDoc?.id) return;
 
         const actor = await this.createActor(ambientLightDoc.id);
@@ -118,9 +113,22 @@ export class LightTextureController {
             { parent: canvas.scene }
         );
 
-        Logger.log("Token created", tokenDoc);
+        Logger.log("Token doc created", tokenDoc);
         if (!tokenDoc) return;
         (tokenDoc as any)?.update({ movementAction: "blink" });
+        const token = game.canvas?.tokens?.get(tokenDoc.id);
+        if (token) {
+            token.onclick = TokenInteractionManager.handleTokenClick;
+            Logger.log("Tocken created", game.canvas?.tokens?.get(tokenDoc.id));
+            const module = socketlib.modules.get(flag.scope);
+            if (module) {
+                game.users?.forEach(u => {
+                    if (!u.isGM) {
+                        module.executeAsUser('addClickHandler', u.id, token.id);
+                    }
+                });
+            }
+        }
 
         await tokenDoc.setFlag(
             flag.scope,

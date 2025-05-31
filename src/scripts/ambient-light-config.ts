@@ -1,5 +1,3 @@
-import { AmbientLightTileController } from "./ambient-ight-tile-controller";
-import { env } from "./constants/environment";
 import { flag } from "./constants/flag";
 import { locale } from "./constants/locale";
 import { settings } from "./constants/settings";
@@ -247,17 +245,6 @@ export class AmbientLightConfig {
                 ambientLight.document
             ).then((tokenDoc: TokenDocument | undefined) => {
                 Logger.log("DATA", tokenDoc);
-                if (!tokenDoc) return;
-                const token = game.canvas?.tokens?.get(tokenDoc.id!);
-                Logger.log(token);
-                if (token) {
-                    TokenInteractionManager.addEventHandler(token)
-                    // token.onclick = TokenInteractionManager.handleTokenClick;
-                } else {
-                    Logger.error(
-                        "Couldn't find the new token and link the click handle event"
-                    );
-                }
             });
         } else {
             LightTextureController.delete(tokenId, ambientLight.document);
