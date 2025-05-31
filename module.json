@@ -31,5 +31,6 @@
   ],
   "url": "https://example.com",
   "manifest": "modules/interactive-light/module.json",
-  "download": "https://example.com/download.zip"
+  "download": "https://example.com/download.zip",
+  "dependencies": ["socketlib"]
 }

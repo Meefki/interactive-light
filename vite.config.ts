@@ -10,6 +10,9 @@ export default defineConfig({
         dir: path.resolve("./dist"),
         entryFileNames: "interactive-light.js"
      },
+     external: [
+      "socketlib"
+     ]
    },
  }
 });

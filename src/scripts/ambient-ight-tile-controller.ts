@@ -1,8 +1,7 @@
-import { PIXI } from "fvtt-types/configuration";
-import { flag, interactive } from "./constants/flag";
+import { flag } from "./constants/flag";
 import { settings } from "./constants/settings";
-import { Switcher } from "./switch";
 import { Logger } from "./utils/logger";
+import { env } from "./constants/environment";
 
 export class AmbientLightTileController {
     public static updateTileTextureSource = (
@@ -12,9 +11,9 @@ export class AmbientLightTileController {
     ): boolean => {
         if (tileId) {
             const tile = game.canvas?.tiles?.get(tileId);
-            if (settings.debug) Logger.log(tile);
+            if (env.debug) Logger.log(tile);
             if (tile) {
-                if (settings.debug)
+                if (env.debug)
                     Logger.log(`UPDATING TILE ${tileId} TEXTURE SOURCE`);
                 tile.document.setFlag(
                     flag.scope,
@@ -36,7 +35,7 @@ export class AmbientLightTileController {
         if (tileId) {
             const tile = game.canvas?.tiles?.get(tileId);
             if (tile) {
-                if (settings.debug) Logger.log(`DELETING TILE: ${tileId}`);
+                if (env.debug) Logger.log(`DELETING TILE: ${tileId}`);
                 game.canvas?.tiles?.removeChild(tile);
                 tile.document.delete();
             }
@@ -54,7 +53,7 @@ export class AmbientLightTileController {
         y: number,
         ambientLightDoc: AmbientLightDocument
     ): Promise<TileDocument | undefined> => {
-        if (settings.debug) Logger.log("CREATING NEW TILE");
+        if (env.debug) Logger.log("CREATING NEW TILE");
 
         const tileDoc = await TileDocument.create(
             {
@@ -94,7 +93,7 @@ export class AmbientLightTileController {
         // }
         // Logger.log(tile);
 
-        if (settings.debug) Logger.log(`TILE DOC CREATED: ${tileDoc.id}`);
+        if (env.debug) Logger.log(`TILE DOC CREATED: ${tileDoc.id}`);
         return tileDoc;
     };
 

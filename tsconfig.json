@@ -35,7 +35,7 @@
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */
     "types": [
       "fvtt-types",
-      "./src/types/index.mjs" 
+      "./src/types/index.mjs"
     ],                                      /* Specify type package names to be included without being referenced in a source file. */
     // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
     // "moduleSuffixes": [],                             /* List of file name suffixes to search when resolving a module. */
@@ -117,5 +117,5 @@
     "src/**/*.ts",
     "types/**/*.d.ts",
     "scripts/**/*.ts"
-  ]
+, "src/types/socketlib.d.mts"  ]
 }

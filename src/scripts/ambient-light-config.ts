@@ -1,7 +1,10 @@
 import { AmbientLightTileController } from "./ambient-ight-tile-controller";
+import { env } from "./constants/environment";
 import { flag } from "./constants/flag";
 import { locale } from "./constants/locale";
 import { settings } from "./constants/settings";
+import { LightTextureController } from "./light-texture-controller";
+import { TokenInteractionManager } from "./token-interaction-manager";
 import { Logger } from "./utils/logger";
 import { fillTemplate } from "./utils/strings";
 
@@ -19,8 +22,15 @@ export class AmbientLightConfig {
     ) => {
         Logger.log("=========================================================");
         Logger.log("---------------------------------------------------------");
-        Logger.log("AmbientLight updated!", document, change, "x" in change, "y" in change, "x" in change || "y" in change);
-        
+        Logger.log(
+            "AmbientLight updated!",
+            document,
+            change,
+            "x" in change,
+            "y" in change,
+            "x" in change || "y" in change
+        );
+
         if ("x" in change || "y" in change) {
             Logger.log("Light position changed:", change.x, change.y);
 
@@ -28,18 +38,18 @@ export class AmbientLightConfig {
                 flag.scope,
                 flag.interactiveName
             ) as boolean;
-            const tileId = doc.getFlag(flag.scope, flag.tileIdName) as string;
+            const tokenId = doc.getFlag(flag.scope, flag.tokenIdName) as string;
 
-            Logger.log(`tileId: ${tileId}`);
-            if (!interactive || !tileId) return;
-            const ok = AmbientLightTileController.changeTilePositions(
-                tileId,
+            Logger.log(`tokenId: ${tokenId}`);
+            if (!interactive || !tokenId) return;
+            const ok = LightTextureController.changeTokenPositions(
+                tokenId,
                 change.x,
                 change.y
             );
             if (!ok) {
-                doc.setFlag(flag.scope, flag.tileIdName, '' as never);
-                doc.setFlag(flag.scope, flag.pathName, '' as never);
+                doc.setFlag(flag.scope, flag.tokenIdName, "" as never);
+                doc.setFlag(flag.scope, flag.pathName, "" as never);
             }
         }
     };
@@ -48,17 +58,17 @@ export class AmbientLightConfig {
 
     //#region deleteAmbientLightHook
 
-    public static deleteAmbientLightHook = (
+    public static deleteAmbientLightHook = async (
         doc: AmbientLightDocument,
         options: any,
         userId: string
     ) => {
-        if (settings.debug) Logger.log(`AMBIENT LIGHT ${doc.id} WAS DELETED`);
+        Logger.log(`AMBIENT LIGHT ${doc.id} WAS DELETED`);
 
-        const tileId = doc.getFlag(flag.scope, flag.tileIdName) as string;
+        const tokenId = doc.getFlag(flag.scope, flag.tokenIdName) as string;
 
-        if (!tileId) return;
-        AmbientLightTileController.deleteTile(tileId, null);
+        if (!tokenId) return;
+        await LightTextureController.delete(tokenId, null);
     };
 
     //#endregion
@@ -193,7 +203,7 @@ export class AmbientLightConfig {
         pathFormGroup.hidden = !checked;
     };
 
-    private static onConfigSubmit = (ev: SubmitEvent) => {
+    private static onConfigSubmit = async (ev: SubmitEvent) => {
         Logger.log("AMBIENT LIGHT CONFIGURATION SUBMITTED");
 
         const interactiveChk = this.getInteractiveCheckbox(
@@ -205,9 +215,9 @@ export class AmbientLightConfig {
         if (!lightId) return;
         const ambientLight = canvas.lighting?.get(lightId);
         if (!ambientLight) return;
-        const tileId = ambientLight.document.getFlag(
+        const tokenId = ambientLight.document.getFlag(
             flag.scope,
-            flag.tileIdName
+            flag.tokenIdName
         );
         let pathComputing =
             pathInput.value ||
@@ -216,33 +226,41 @@ export class AmbientLightConfig {
         const path = pathComputing;
 
         if (interactiveChk.checked) {
-            const changed = AmbientLightTileController.updateTileTextureSource(
-                tileId,
+            const changed = await LightTextureController.updateTextureSource(
+                tokenId,
                 lightId,
                 path
             );
             if (changed) return;
 
-            if (settings.debug) Logger.log("CREATING TILE");
-            AmbientLightTileController.createTile(
+            Logger.log("CREATING TOKEN");
+            LightTextureController.createActorToken(
                 path,
-                AmbientLightTileController.culcTilePosition(
+                LightTextureController.culcObjPosition(
                     ambientLight.position._x,
                     "X"
                 ),
-                AmbientLightTileController.culcTilePosition(
+                LightTextureController.culcObjPosition(
                     ambientLight.position._y,
                     "Y"
                 ),
                 ambientLight.document
-            ).then((data) => {
-                if (settings.debug) Logger.log("DATA", data);
+            ).then((tokenDoc: TokenDocument | undefined) => {
+                Logger.log("DATA", tokenDoc);
+                if (!tokenDoc) return;
+                const token = game.canvas?.tokens?.get(tokenDoc.id!);
+                Logger.log(token);
+                if (token) {
+                    TokenInteractionManager.addEventHandler(token)
+                    // token.onclick = TokenInteractionManager.handleTokenClick;
+                } else {
+                    Logger.error(
+                        "Couldn't find the new token and link the click handle event"
+                    );
+                }
             });
         } else {
-            AmbientLightTileController.deleteTile(
-                tileId,
-                ambientLight.document
-            );
+            LightTextureController.delete(tokenId, ambientLight.document);
         }
     };
 
