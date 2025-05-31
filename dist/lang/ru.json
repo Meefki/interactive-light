@@ -1,0 +1,5 @@
+{
+    "INTERACTIVE_LIGHT.Enabled": "Интерактивный свет",
+    "INTERACTIVE_LIGHT.EnabledHint": "Показывает могут ли игроки включать и выключать источник света.",
+    "INTERACTIVE_LIGHT.Path": "Иконка"
+}

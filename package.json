@@ -12,7 +12,8 @@
   "description": "",
   "devDependencies": {
     "fvtt-types": "github:League-of-Foundry-Developers/foundry-vtt-types#main",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vite-plugin-static-copy": "^3.0.0"
   },
   "dependencies": {
     "vite": "^6.3.5"
