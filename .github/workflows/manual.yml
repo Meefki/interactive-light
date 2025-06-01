@@ -19,7 +19,7 @@ jobs:
           zip -r dist/${{ github.ref_name }}.zip . -x ".git/*" -x ".github/*" -x "*.md" -x "dist/*"
 
       - name: Upload release artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: module-release
           path: dist/
