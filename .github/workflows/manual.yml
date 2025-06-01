@@ -1,0 +1,43 @@
+name: Build and Release Module
+
+on:
+  push:
+    tags:
+      - "v*"  # Запускать при создании тега (например, v1.0.0)
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Zip module
+        run: |
+          mkdir -p dist
+          zip -r dist/${{ github.ref_name }}.zip . -x ".git/*" -x ".github/*" -x "*.md" -x "dist/*"
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: module-release
+          path: dist/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: module-release
+          path: dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
+          files: dist/*.zip
