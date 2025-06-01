@@ -27,7 +27,7 @@
   ],
   "socket": true,
   "esmodules": [
-    "dist/interactive-light.js"
+    "src/interactive-light.js"
   ],
   "url": "https://example.com",
   "manifest": "modules/interactive-light/module.json",

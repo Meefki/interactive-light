@@ -5,36 +5,14 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 export default defineConfig({
     build: {
         outDir: path.resolve('./dist'),
-        emptyOutDir: true,
+        emptyOutDir: false,
         sourcemap: undefined,
         rollupOptions: {
             input: 'src/interactive-light.ts',
             output: {
-                dir: path.resolve('./dist/src'),
+                dir: path.resolve('./src'),
                 entryFileNames: 'interactive-light.js',
             },
         },
-    },
-    plugins: [
-        viteStaticCopy({
-            targets: [
-                {
-                    src: 'module.json',
-                    dest: './'
-                },
-                {
-                    src: 'LICENSE',
-                    dest: './'
-                },
-                {
-                    src: 'readme.md',
-                    dest: './'
-                },
-                {
-                    src: 'lang/*',
-                    dest: './lang/'
-                }
-            ]
-        })
-    ]
+    }
 });
