@@ -1,5 +1,6 @@
 import { flag } from "./constants/flag";
 import { settings } from "./constants/settings";
+import { FolderController } from "./folder-controller";
 import { TokenInteractionManager } from "./token-interaction-manager";
 import { Logger } from "./utils/logger";
 
@@ -39,28 +40,37 @@ export class LightTextureController {
         }
     };
 
+    public static deleteTokenHook = async (
+        doc: TokenDocument,
+        options: any,
+        userId: string
+    ) => {
+        if (doc.getFlag(flag.scope, flag.lightIdName)) {
+            const actorId = doc.actor?.id;
+            if (actorId) {
+                const actor = game.actors?.get(actorId);
+                if (actor) {
+                    Logger.log(`DELETING ASSOCIATED ACTOR: ${actorId}`);
+                    await actor.delete();
+                }
+            }
+        }
+    };
+
     public static delete = async (
         tokenId: string,
-        document: AmbientLightDocument | null
+        document: AmbientLightDocument | null = null
     ) => {
         if (!game.user?.isGM) return;
 
         if (tokenId) {
-            const token = game.canvas?.tokens?.get(tokenId);
-            if (token) {
+            const sceneToken = game.scenes.current?.tokens.get(tokenId);
+            const canvasToken = game.canvas?.tokens?.get(tokenId);
+            if (sceneToken) {
                 Logger.log(`DELETING TOKEN: ${tokenId}`);
-                const actorId = token.actor?.id;
 
-                game.canvas?.tokens?.removeChild(token);
-                await token.document.delete();
-
-                if (actorId) {
-                    const actor = game.actors?.get(actorId);
-                    if (actor) {
-                        Logger.log(`DELETING ASSOCIATED ACTOR: ${actorId}`);
-                        await actor.delete();
-                    }
-                }
+                if (canvasToken) game.canvas?.tokens?.removeChild(canvasToken);
+                await sceneToken.delete();
             }
         }
 
@@ -75,9 +85,12 @@ export class LightTextureController {
     ): Promise<Actor | undefined> => {
         if (!game.user?.isGM) return;
 
+        const folder = await FolderController.getFolder();
+
         const actor = await Actor.create({
             name: `light-${lightId}`,
             type: "base",
+            folder: folder.id,
         });
 
         return actor;
@@ -122,9 +135,9 @@ export class LightTextureController {
             Logger.log("Tocken created", game.canvas?.tokens?.get(tokenDoc.id));
             const module = socketlib.modules.get(flag.scope);
             if (module) {
-                game.users?.forEach(u => {
-                    if (!u.isGM) {
-                        module.executeAsUser('addClickHandler', u.id, token.id);
+                game.users?.forEach((u) => {
+                    if (!u.isGM && u.active) {
+                        module.executeAsUser("addClickHandler", u.id, token.id);
                     }
                 });
             }
