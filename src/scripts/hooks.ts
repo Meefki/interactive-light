@@ -11,7 +11,9 @@ export function initHooks() {
 }
 
 function initHook(data: any) {
-    Hooks.on("ready", readyHook);
+    // Hooks.on("ready", readyHook);
+    Hooks.on("canvasReady", TokenInteractionManager.init);
+
     Hooks.on(
         "renderAmbientLightConfig",
         AmbientLightConfig.renderLightConfigHook
@@ -27,7 +29,7 @@ function initHook(data: any) {
 }
 
 function readyHook() {
-    TokenInteractionManager.init();
+    // TokenInteractionManager.init();
 }
 
 export * as register from "./hooks";

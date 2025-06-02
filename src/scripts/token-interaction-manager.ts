@@ -4,16 +4,17 @@ import { Logger } from "./utils/logger";
 
 export class TokenInteractionManager {
     public static readonly HOOK_NAME = "leftClickToken";
-    private static hookId?: number;
 
-    public static init() {
+    public static init = () => {
         this.setupTokenClickHandler();
     }
 
-    private static setupTokenClickHandler() {
+    private static setupTokenClickHandler = () => {
+        Logger.log('Initializing light tokens...');
         const tokens = (game.canvas?.tokens?.objects?.children as any[])
             .filter((t) => t.document.getFlag(flag.scope, flag.lightIdName))
             .map((t) => {
+                Logger.info("Add click event candler to", t);
                 this.addEventHandler(t);
                 return t;
             });
