@@ -5,11 +5,46 @@ import { Logger } from "./utils/logger.js";
 export class TokenInteractionManager {
     static HOOK_NAME = "leftClickToken";
 
-    static init = () => {
-        // this.__setupTokenClickHandler();
+    static init = () => { }
+
+    static AllowChangeInteractiveTokens() {
+        libWrapper.register(
+            'interactive-light',
+            'foundry.canvas.placeables.Token.prototype._canControl',
+            function (wrapped, user, event) {
+                const isInteractive = this.document.getFlag(flag.scope, flag.lightIdName) != null;
+                Logger.log('_canControl', event, 'for', user, ':', isInteractive);
+                if (isInteractive) return true;
+                return wrapped.call(this, user, event);
+            },
+            libWrapper.MIXED
+        );
+
+        libWrapper.register(
+            'interactive-light',
+            'foundry.canvas.placeables.Token.prototype._canView',
+            function (wrapped, user, event) {
+                const isInteractive = this.document.getFlag(flag.scope, flag.lightIdName) != null;
+                Logger.log('_canView', event, 'for', user, ':', isInteractive);
+                if (isInteractive) return true;
+                return wrapped.call(this, user, event);
+            },
+            libWrapper.MIXED
+        );
+
+        libWrapper.register(
+            'interactive-light',
+            'foundry.canvas.placeables.Token.prototype._canDrag',
+            function (wrapped, user, event) {
+                const isInteractive = this.document.getFlag(flag.scope, flag.lightIdName) != null;
+                Logger.log('_canDrag', event, 'for', user, ':', isInteractive);
+                if (isInteractive && !user.isGM) return false;
+                return wrapped.call(this, user, event);
+            },
+            libWrapper.MIXED
+        )
     }
 
-    // 1. Add wrappers for tokens
     static AddSingleClickWrapper() { 
         Logger.info("Registering wrapper for a single click");
         libWrapper.register(
@@ -23,7 +58,7 @@ export class TokenInteractionManager {
                     return wrapped.call(this, event);
                 
                 if (lightInfo.mode === 1)
-                    TokenInteractionManager.__handleTokenClick(this);
+                    TokenInteractionManager.handleTokenClick(this);
                 return wrapped.call(this, event);
             },
             libWrapper.MIXED
@@ -44,7 +79,7 @@ export class TokenInteractionManager {
                     return wrapped.call(this, event);
                 
                 if (lightInfo.mode === 0)
-                    TokenInteractionManager.__handleTokenClick(event.currentTarget);
+                    TokenInteractionManager.handleTokenClick(event.currentTarget);
                 return true;
             },
             libWrapper.MIXED
@@ -52,13 +87,13 @@ export class TokenInteractionManager {
         Logger.info("The wrapper for a double click registered");
     }
 
-    static async __handleTokenClick(t) {
+    static async handleTokenClick(t) {
         if (!t) {
-            Logger.log("TokenInteractionManager.__handleTokenClick: Empty token");
+            Logger.log("TokenInteractionManager.handleTokenClick: Empty token");
             return;
         }
 
-        const lightInfo = this.__getLightConfig(t);
+        const lightInfo = TokenInteractionManager.__getLightConfig(t);
         if (!lightInfo || !lightInfo.lightId) return;
         
         await PermissionManager.toggleLightHidden(lightInfo.lightId);

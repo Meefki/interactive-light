@@ -1,6 +1,6 @@
 import { flag } from "./constants/flags.js";
 import { settings } from "./constants/settings.js";
-import { FolderController } from "./folder-controller.js";
+import { FolderManager } from './utils/folder-manager.js';
 import { TokenInteractionManager } from "./token-interaction-manager.js";
 import { Logger } from "./utils/logger.js";
 
@@ -86,7 +86,7 @@ export class LightTextureController {
     ) => {
         if (!game.user?.isGM) return;
 
-        const folder = await FolderController.getFolder();
+        const folder = await FolderManager.getFolder();
 
         const actor = await Actor.create({
             name: `light-${lightId}`,
@@ -129,19 +129,19 @@ export class LightTextureController {
         Logger.log("Token doc created", tokenDoc);
         if (!tokenDoc) return;
         (tokenDoc)?.update({ movementAction: "blink" });
-        const token = game.canvas?.tokens?.get(tokenDoc.id);
-        if (token) {
-            token.onclick = TokenInteractionManager.handleTokenClick;
-            Logger.log("Tocken created", game.canvas?.tokens?.get(tokenDoc.id));
-            const module = socketlib.modules.get(flag.scope);
-            if (module) {
-                game.users?.forEach((u) => {
-                    if (!u.isGM && u.active) {
-                        module.executeAsUser("addClickHandler", u.id, token.id);
-                    }
-                });
-            }
-        }
+        // const token = game.canvas?.tokens?.get(tokenDoc.id);
+        // if (token) {
+        //     token.onclick = TokenInteractionManager.handleTokenClick;
+        //     Logger.log("Tocken created", game.canvas?.tokens?.get(tokenDoc.id));
+        //     const module = socketlib.modules.get(flag.scope);
+        //     if (module) {
+        //         game.users?.forEach((u) => {
+        //             if (!u.isGM && u.active) {
+        //                 module.executeAsUser("addClickHandler", u.id, token.id);
+        //             }
+        //         });
+        //     }
+        // }
 
         await tokenDoc.setFlag(
             flag.scope,

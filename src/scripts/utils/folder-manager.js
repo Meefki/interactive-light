@@ -1,6 +1,6 @@
-import { settings } from "./constants/settings.js";
+import { settings } from "../constants/settings.js";
 
-export class FolderController {
+export class FolderManager {
     static getFolder = async () => {
         let folder = game.folders?.getName(settings.actorFolderName);
         if (!folder) {

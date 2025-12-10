@@ -4,6 +4,7 @@ import { Logger } from "./utils/logger.js";
 import { LightTextureController } from "./light-texture-controller.js";
 import { PermissionManager } from "./permission-manager.js";
 import { TokenInteractionManager } from "./token-interaction-manager.js";
+import { LibManager } from "./utils/lib-manager.js";
 
 export function initHooks() {
     Logger.info("Init hooks...");
@@ -12,6 +13,9 @@ export function initHooks() {
 }
 
 function initHook(data) {
+    if (!LibManager.checkLibWrapper() || !LibManager.checkSocketLib()) return;
+
+    TokenInteractionManager.AllowChangeInteractiveTokens();
     TokenInteractionManager.AddSingleClickWrapper();
     TokenInteractionManager.AddDoubleClickWrapper();
 
@@ -23,9 +27,6 @@ function initHook(data) {
     Hooks.on(hook_alias.deleteAmbientLight, AmbientLightConfig.deleteAmbientLightHook);
     Hooks.on(hook_alias.deleteToken, LightTextureController.deleteTokenHook);
 
-    if (!game.modules?.get("socketlib")?.active) {
-        Logger.error("Socketlib is not active!");
-    }
     PermissionManager.init();
 }
 
