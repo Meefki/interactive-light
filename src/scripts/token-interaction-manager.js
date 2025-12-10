@@ -10,7 +10,7 @@ export class TokenInteractionManager {
     static AllowChangeInteractiveTokens() {
         libWrapper.register(
             'interactive-light',
-            'foundry.canvas.placeables.Token.prototype._canControl',
+            'CONFIG.Token.objectClass.prototype._canControl',
             function (wrapped, user, event) {
                 const isInteractive = this.document.getFlag(flag.scope, flag.lightIdName) != null;
                 Logger.log('_canControl', event, 'for', user, ':', isInteractive);
@@ -22,7 +22,7 @@ export class TokenInteractionManager {
 
         libWrapper.register(
             'interactive-light',
-            'foundry.canvas.placeables.Token.prototype._canView',
+            'CONFIG.Token.objectClass.prototype._canView',
             function (wrapped, user, event) {
                 const isInteractive = this.document.getFlag(flag.scope, flag.lightIdName) != null;
                 Logger.log('_canView', event, 'for', user, ':', isInteractive);
@@ -34,7 +34,7 @@ export class TokenInteractionManager {
 
         libWrapper.register(
             'interactive-light',
-            'foundry.canvas.placeables.Token.prototype._canDrag',
+            'CONFIG.Token.objectClass.prototype._canDrag',
             function (wrapped, user, event) {
                 const isInteractive = this.document.getFlag(flag.scope, flag.lightIdName) != null;
                 Logger.log('_canDrag', event, 'for', user, ':', isInteractive);
@@ -49,7 +49,7 @@ export class TokenInteractionManager {
         Logger.info("Registering wrapper for a single click");
         libWrapper.register(
             'interactive-light',
-            'foundry.canvas.placeables.Token.prototype._onClickLeft',
+            'CONFIG.Token.objectClass.prototype._onClickLeft',
             function (wrapped, event) {
                 Logger.log("Single click on: ", this);
                 Logger.log("Logging event (single click):", event)
@@ -70,16 +70,17 @@ export class TokenInteractionManager {
         Logger.info("Registering wrapper for a double click");
         libWrapper.register(
             'interactive-light',
-            'foundry.canvas.placeables.Token.prototype._onClickLeft2',
+            'CONFIG.Token.objectClass.prototype._onClickLeft2',
+            // 'foundry.canvas.placeables.Token.prototype._onClickLeft2',
             function (wrapped, event) {
                 Logger.log("Double click on: ", this);
                 Logger.log("Logging event (double click):", event)
                 const lightInfo = TokenInteractionManager.__getLightConfig(this);
-                if (!lightInfo || !lightInfo.lightId) 
+                if (!lightInfo || !lightInfo.lightId)
                     return wrapped.call(this, event);
                 
                 if (lightInfo.mode === 0)
-                    TokenInteractionManager.handleTokenClick(event.currentTarget);
+                    TokenInteractionManager.handleTokenClick(this);
                 return true;
             },
             libWrapper.MIXED

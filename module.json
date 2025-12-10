@@ -26,9 +26,7 @@
     }
   ],
   "socket": true,
-  "scripts": [
-    "dist/interactive-light-min.js"
-  ],
+  "esmodules": ["dist/interactive-light-min.js"],
   "url": "https://github.com/Meefki/interactive-light",
   "manifest": "https://github.com/Meefki/interactive-light/releases/download/v1.1.0/module.json",
   "download": "https://github.com/Meefki/interactive-light/releases/download/v1.1.0/module.zip",
@@ -40,7 +38,7 @@
         "compatibility": {}
       },
       {
-        "id": "libWrapper",
+        "id": "lib-wrapper",
         "type": "module",
         "compatibility": {}
       }

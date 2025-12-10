@@ -3,6 +3,7 @@ import { settings } from "./constants/settings.js";
 import { FolderManager } from './utils/folder-manager.js';
 import { TokenInteractionManager } from "./token-interaction-manager.js";
 import { Logger } from "./utils/logger.js";
+import { ActorManager } from "./utils/actor-manager.js";
 
 export class LightTextureController {
     static updateTextureSource = async (
@@ -90,7 +91,7 @@ export class LightTextureController {
 
         const actor = await Actor.create({
             name: `light-${lightId}`,
-            type: "base",
+            type: ActorManager.getModuleActorType(),
             folder: folder.id,
         });
 
