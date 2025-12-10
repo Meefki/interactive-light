@@ -11,7 +11,20 @@ jobs:
     permissions:
       contents: write
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+
+    # Setup Node.js
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build module
+      run: npm run build
 
     # Substitute the Manifest and Download URLs in the module.json
     - name: Substitute Manifest and Download Links For Versioned Ones
@@ -26,14 +39,20 @@ jobs:
         download: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.zip
 
     # Create a zip file with all files required by the module to add to the release
-    - run: zip -r ./module.zip module.json LICENSE src/interactive-light.js lang/
+    - name: Create module zip
+      run: | 
+        zip -r ./module.zip \
+        module.json \
+        LICENSE \
+        dist \
+        lang
 
     # Create a release for this specific version
     - name: Update Release with Files
       id: create_version_release
       uses: ncipollo/release-action@v1
       with:
-        allowUpdates: true # Set this to false if you want to prevent updating existing releases
+        allowUpdates: false
         name: ${{ github.event.release.name }}
         draft: false
         prerelease: false
