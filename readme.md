@@ -7,7 +7,7 @@ A simple module that allows you to add a bit interactive with light sources for 
 ## Usage
 
 - Create a light source
-- Go to the "Advanced" tab in the light source configuration and follow down the page
+- Go to the "Interactive Light" tab in the light source configuration
 - Check the "Interactive" field
 - Choose your texture for the light
 - Enjoy with a new stuff
