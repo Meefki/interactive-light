@@ -1,18 +1,18 @@
-import { flag } from "./constants/flag";
-import { TokenInteractionManager } from "./token-interaction-manager";
-import { Logger } from "./utils/logger";
+import { flag } from "./constants/flags.js";
+import { TokenInteractionManager } from "./token-interaction-manager.js";
+import { Logger } from "./utils/logger.js";
 
 export class PermissionManager {
-    public static init = () => {
+    static init = () => {
         socketlib.registerModule(flag.scope);
-        this.socketRegisterToggleLightHidden();
-        this.socketRegisterAddClickHandler();
+        this.__socketRegisterToggleLightHidden();
+        this.__socketRegisterAddClickHandler();
     };
 
-    private static socketRegisterToggleLightHidden = () => {
+    static __socketRegisterToggleLightHidden = () => {
         const socket = socketlib.modules.get(flag.scope);
         if (!socket) return;
-        socket.register("toggleLightHidden", (lightId: string) => {
+        socket.register("toggleLightHidden", (lightId) => {
             Logger.log("Chached the event");
             const light = game.canvas?.lighting?.get(lightId);
             if (!light) return false;
@@ -21,12 +21,12 @@ export class PermissionManager {
         });
     };
 
-    private static socketRegisterAddClickHandler = () => {
+    static __socketRegisterAddClickHandler = () => {
         const socket = socketlib.modules.get(flag.scope);
         if (!socket) return;
         socket.register(
             "addClickHandler",
-            (tokenId: string, userId: string) => {
+            (tokenId, userId) => {
                 const token = game.canvas?.tokens?.get(tokenId);
                 Logger.log(token);
                 if (!token) return;
@@ -35,7 +35,7 @@ export class PermissionManager {
         );
     };
 
-    public static toggleLightHidden = async (lightId: string) => {
+    static toggleLightHidden = async (lightId) => {
         if (!lightId) return;
         const light = game.canvas?.lighting?.get(lightId);
         if (!light) return;

@@ -1,5 +1,26 @@
 {
-    "INTERACTIVE_LIGHT.Enabled": "Interactive light",
-    "INTERACTIVE_LIGHT.EnabledHint": "Indicates whether this light source can be toggled by players.",
-    "INTERACTIVE_LIGHT.Path": "Icon"
+    "INTERACTIVE_LIGHT": {
+        "Config": {
+            "Enabled": {
+                "Label": "Interactive light",
+                "Hint": "Indicates whether this light source can be toggled by players."
+            },
+
+            "Path": {
+                "Label": "Icon",
+                "Hint": "The texture used as the light source icon."
+            },
+
+            "ClickOptions": {
+                "Label": "Click handler",
+                "Options": {
+                    "Single": "Single",
+                    "Double": "Double"
+                },
+                "Hint": "Configures how the light source reacts to click(-s). Double-click is the default."
+            },
+
+            "TabName": "Interactive light"
+        }
+    }
 }

@@ -1,15 +1,15 @@
-import { flag } from "./constants/flag";
-import { settings } from "./constants/settings";
-import { FolderController } from "./folder-controller";
-import { TokenInteractionManager } from "./token-interaction-manager";
-import { Logger } from "./utils/logger";
+import { flag } from "./constants/flags.js";
+import { settings } from "./constants/settings.js";
+import { FolderController } from "./folder-controller.js";
+import { TokenInteractionManager } from "./token-interaction-manager.js";
+import { Logger } from "./utils/logger.js";
 
 export class LightTextureController {
-    public static updateTextureSource = async (
-        tokenId: string,
-        lightId: string,
-        path: string
-    ): Promise<boolean> => {
+    static updateTextureSource = async (
+        tokenId,
+        lightId,
+        path
+    ) => {
         if (!game.user?.isGM) return false;
         if (!tokenId) return false;
 
@@ -30,7 +30,7 @@ export class LightTextureController {
             await token.document.setFlag(
                 flag.scope,
                 flag.lightIdName,
-                lightId as never
+                lightId
             );
 
             return true;
@@ -40,11 +40,12 @@ export class LightTextureController {
         }
     };
 
-    public static deleteTokenHook = async (
-        doc: TokenDocument,
-        options: any,
-        userId: string
+    static deleteTokenHook = async (
+        doc,
+        options,
+        userId
     ) => {
+        Logger.log(doc);
         if (doc.getFlag(flag.scope, flag.lightIdName)) {
             const actorId = doc.actor?.id;
             if (actorId) {
@@ -57,9 +58,9 @@ export class LightTextureController {
         }
     };
 
-    public static delete = async (
-        tokenId: string,
-        document: AmbientLightDocument | null = null
+    static delete = async (
+        tokenId,
+        document = null
     ) => {
         if (!game.user?.isGM) return;
 
@@ -75,14 +76,14 @@ export class LightTextureController {
         }
 
         if (document) {
-            document.setFlag(flag.scope, flag.tokenIdName, tokenId as never);
-            document.setFlag(flag.scope, flag.pathName, "" as never);
+            document.setFlag(flag.scope, flag.tokenIdName, tokenId);
+            document.setFlag(flag.scope, flag.pathName, "");
         }
     };
 
-    private static createActor = async (
-        lightId: string
-    ): Promise<Actor | undefined> => {
+    static __createActor = async (
+        lightId
+    ) => {
         if (!game.user?.isGM) return;
 
         const folder = await FolderController.getFolder();
@@ -96,15 +97,14 @@ export class LightTextureController {
         return actor;
     };
 
-    public static createActorToken = async (
-        imgPath: string,
-        x: number,
-        y: number,
-        ambientLightDoc: AmbientLightDocument
-    ): Promise<TokenDocument | undefined> => {
+    static createActorToken = async (
+        imgPath,
+        x, y,
+        ambientLightDoc
+    ) => {
         if (!ambientLightDoc?.id) return;
 
-        const actor = await this.createActor(ambientLightDoc.id);
+        const actor = await this.__createActor(ambientLightDoc.id);
         if (!actor) return;
 
         Logger.log("light pos", `${x} : ${y}`);
@@ -128,7 +128,7 @@ export class LightTextureController {
 
         Logger.log("Token doc created", tokenDoc);
         if (!tokenDoc) return;
-        (tokenDoc as any)?.update({ movementAction: "blink" });
+        (tokenDoc)?.update({ movementAction: "blink" });
         const token = game.canvas?.tokens?.get(tokenDoc.id);
         if (token) {
             token.onclick = TokenInteractionManager.handleTokenClick;
@@ -146,22 +146,22 @@ export class LightTextureController {
         await tokenDoc.setFlag(
             flag.scope,
             flag.lightIdName,
-            ambientLightDoc.id as never
+            ambientLightDoc.id
         );
         await ambientLightDoc.setFlag(
             flag.scope,
             flag.tokenIdName,
-            tokenDoc.id as never
+            tokenDoc.id
         );
 
         return tokenDoc;
     };
 
-    public static changeTokenPositions = async (
-        tokenId: string,
-        posX: number,
-        posY: number
-    ): Promise<boolean> => {
+    static changeTokenPositions = async (
+        tokenId,
+        posX,
+        posY
+    ) => {
         if (!game.user?.isGM) return false;
 
         const token = game.canvas?.tokens?.get(tokenId);
@@ -170,7 +170,7 @@ export class LightTextureController {
             return false;
         }
 
-        const updates: Record<string, number> = {};
+        const updates = {};
 
         if (posX === 0 || posX) {
             const x = this.culcObjPosition(posX, "X");
@@ -196,14 +196,14 @@ export class LightTextureController {
         return true;
     };
 
-    public static culcObjPosition = (
-        light: number,
-        axis: "X" | "Y"
-    ): number => {
-        return light - this.getTileSize(axis) / 2;
+    static culcObjPosition = (
+        light,
+        axis
+    ) => {
+        return light - this.__getTileSize(axis) / 2;
     };
 
-    private static getTileSize = (axis: "X" | "Y"): number => {
+    static __getTileSize = (axis) => {
         switch (axis) {
             case "X":
                 return settings.tileWidth;

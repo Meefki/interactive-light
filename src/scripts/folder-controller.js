@@ -1,21 +1,21 @@
-import { settings } from "./constants/settings";
+import { settings } from "./constants/settings.js";
 
 export class FolderController {
-    public static getFolder = async (): Promise<Folder.Stored> => {
+    static getFolder = async () => {
         let folder = game.folders?.getName(settings.actorFolderName);
         if (!folder) {
-            folder = await this.createFolder();
+            folder = await this.__createFolder();
         }
 
         return folder;
     }
 
-    private static createFolder = async (): Promise<Folder.Stored> => {
+    static __createFolder = async () => {
         const folder = await Folder.create({
             name: settings.actorFolderName,
             type: "Actor"
         });
 
-        return folder as Folder.Stored;
+        return folder;
     }
 }

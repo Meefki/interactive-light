@@ -3,17 +3,17 @@ const consoleColor1 = "color: #7bf542";
 const consoleColor2 = "color: #d8eb34";
 const consoleColor3 = "color: #ffffff";
 
-export enum LogLevels {
-    'debug' = 0,
-    'info' = 1,
-    'warn' = 2,
-    'error' = 3
+export const LogLevels = {
+    debug: 0,
+    info: 1,
+    warn: 2,
+    error: 3
 }
 
 export class Logger {
-    public static minLogLevel: LogLevels = LogLevels.warn;
+    static minLogLevel = LogLevels.debug;
 
-    public static log(...object: any) {
+    static log(...object) {
         if (this.minLogLevel > LogLevels.debug) return;
 
         console.log(
@@ -25,7 +25,7 @@ export class Logger {
         );
     }
 
-    public static info(...object: any) {
+    static info(...object) {
         if (this.minLogLevel > LogLevels.info) return;
 
         console.info(
@@ -37,7 +37,7 @@ export class Logger {
         )
     }
 
-    public static warn(...object: any) {
+    static warn(...object) {
         if (this.minLogLevel > LogLevels.warn) return;
 
         console.warn(
@@ -49,7 +49,7 @@ export class Logger {
         )
     }
 
-    public static error(...object: any) {
+    static error(...object) {
         if (this.minLogLevel > LogLevels.error) return;
 
         console.error(
@@ -62,4 +62,4 @@ export class Logger {
     }
 }
 
-export * as logger from "./logger";
+export * as logger from "./logger.js";
