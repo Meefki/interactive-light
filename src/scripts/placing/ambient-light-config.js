@@ -1,10 +1,10 @@
-import { Logger } from "./utils/logger.js";
+import { Logger } from "../utils/logger.js";
 
-import { flag } from "./constants/flags.js";
-import { locale } from "./constants/locale.js";
-import { settings } from "./constants/settings.js";
+import { flag } from "../constants/flags.js";
+import { locale } from "../constants/locale.js";
+import { settings } from "../constants/settings.js";
 import { LightTextureController } from "./light-texture-controller.js";
-import { fillTemplate } from "./utils/strings.js";
+import { fillTemplate } from "../utils/strings.js";
 
 export class AmbientLightConfig {
     static #checkboxInput = "chekbox-input";

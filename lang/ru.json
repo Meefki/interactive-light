@@ -21,6 +21,13 @@
             },
 
             "TabName": "Интерактивный свет"
+        },
+        "Menu": {
+            "Prefabs": {
+                "Label": "Префабы",
+                "Hint": "Префабы интерактивного света",
+                "Name": "Prefabs of Interactive Light"
+            }
         }
     }
 }

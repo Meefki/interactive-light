@@ -21,6 +21,13 @@
             },
 
             "TabName": "Interactive light"
+        },
+        "Menu": {
+            "Prefabs": {
+                "Lable": "Prefabs",
+                "Hint": "Prefabs of Interactive Light",
+                "Name": "Prefabs of Interactive Light"
+            }
         }
     }
 }

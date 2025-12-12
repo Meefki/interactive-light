@@ -1,5 +1,5 @@
-import { flag } from "./constants/flags.js";
-import { Logger } from "./utils/logger.js";
+import { flag } from "../constants/flags.js";
+import { Logger } from "../utils/logger.js";
 
 export class PermissionManager {
     static init = () => {

@@ -1,6 +1,6 @@
-import { flag } from "./constants/flags.js";
+import { flag } from "../constants/flags.js";
 import { PermissionManager } from "./permission-manager.js";
-import { Logger } from "./utils/logger.js";
+import { Logger } from "../utils/logger.js";
 
 export class TileInteractionManager {
     static HOOK_NAME = "leftClickTile";
