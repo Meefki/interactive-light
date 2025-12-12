@@ -1,34 +1,31 @@
 import { flag } from "./constants/flags.js";
 import { settings } from "./constants/settings.js";
-import { FolderManager } from './utils/folder-manager.js';
-import { TokenInteractionManager } from "./token-interaction-manager.js";
 import { Logger } from "./utils/logger.js";
-import { ActorManager } from "./utils/actor-manager.js";
 
 export class LightTextureController {
     static updateTextureSource = async (
-        tokenId,
+        tileId,
         lightId,
         path
     ) => {
         if (!game.user?.isGM) return false;
-        if (!tokenId) return false;
+        if (!tileId) return false;
 
-        const token = game.canvas?.tokens?.get(tokenId);
-        Logger.log(token);
+        const tile = game.canvas?.tiles?.get(tileId);
+        Logger.log(tile);
 
-        if (!token) {
-            Logger.warn(`Token with ID ${tokenId} not found`);
+        if (!tile) {
+            Logger.warn(`tile with ID ${tileId} not found`);
             return false;
         }
 
         try {
-            Logger.log(`UPDATING TOKEN ${tokenId} TEXTURE SOURCE`);
+            Logger.log(`UPDATING tile ${tileId} TEXTURE SOURCE`);
 
-            await token.document.update({
+            await tile.document.update({
                 texture: { src: path },
             });
-            await token.document.setFlag(
+            await tile.document.setFlag(
                 flag.scope,
                 flag.lightIdName,
                 lightId
@@ -36,160 +33,110 @@ export class LightTextureController {
 
             return true;
         } catch (error) {
-            Logger.error(`Failed to update token ${tokenId}:`, error);
+            Logger.error(`Failed to update tile ${tileId}:`, error);
             return false;
         }
     };
 
-    static deleteTokenHook = async (
-        doc,
-        options,
-        userId
-    ) => {
-        Logger.log(doc);
-        if (doc.getFlag(flag.scope, flag.lightIdName)) {
-            const actorId = doc.actor?.id;
-            if (actorId) {
-                const actor = game.actors?.get(actorId);
-                if (actor) {
-                    Logger.log(`DELETING ASSOCIATED ACTOR: ${actorId}`);
-                    await actor.delete();
-                }
-            }
-        }
-    };
-
     static delete = async (
-        tokenId,
+        tileId,
         document = null
     ) => {
         if (!game.user?.isGM) return;
 
-        if (tokenId) {
-            const sceneToken = game.scenes.current?.tokens.get(tokenId);
-            const canvasToken = game.canvas?.tokens?.get(tokenId);
-            if (sceneToken) {
-                Logger.log(`DELETING TOKEN: ${tokenId}`);
+        if (tileId) {
+            const sceneTile = game.scenes.current?.tiles.get(tileId);
+            const canvasTile = game.canvas?.tiles?.get(tileId);
+            if (sceneTile) {
+                Logger.log(`DELETING tile: ${tileId}`);
 
-                if (canvasToken) game.canvas?.tokens?.removeChild(canvasToken);
-                await sceneToken.delete();
+                if (canvasTile) game.canvas?.tiles?.removeChild(canvasTile);
+                await sceneTile.delete();
             }
         }
 
         if (document) {
-            document.setFlag(flag.scope, flag.tokenIdName, tokenId);
+            document.setFlag(flag.scope, flag.tileIdName, tileId);
             document.setFlag(flag.scope, flag.pathName, "");
         }
     };
 
-    static __createActor = async (
-        lightId
-    ) => {
-        if (!game.user?.isGM) return;
+    static __createTile = async (tileDoc) => 
+        await new foundry.canvas.placeables.Tile(tileDoc);
 
-        const folder = await FolderManager.getFolder();
-
-        const actor = await Actor.create({
-            name: `light-${lightId}`,
-            type: ActorManager.getModuleActorType(),
-            folder: folder.id,
-        });
-
-        return actor;
-    };
-
-    static createActorToken = async (
+    static createTile = async (
         imgPath,
         x, y,
         ambientLightDoc
     ) => {
         if (!ambientLightDoc?.id) return;
 
-        const actor = await this.__createActor(ambientLightDoc.id);
-        if (!actor) return;
-
         Logger.log("light pos", `${x} : ${y}`);
-        const tokenDoc = await TokenDocument.create(
+        const tileDoc = await TileDocument.create(
             {
-                name: actor.name,
-                actorId: actor.id,
-                x: x,
-                y: y,
-                width: 1,
-                height: 1,
-                disposition: CONST.TOKEN_DISPOSITIONS.SECRET,
+                name: `light-${ambientLightDoc.id}`,
+                x: this.calcObjPosition(x, "X"),
+                y: this.calcObjPosition(y, "Y"),
+                width: settings.tileWidth,
+                height: settings.tileHeight,
                 texture: {
                     src: imgPath,
-                    anchorX: 0.5,
-                    anchorY: 0.5,
                 },
             },
             { parent: canvas.scene }
         );
+        Logger.log("tile doc created", tileDoc);
+        if (!tileDoc) return;
 
-        Logger.log("Token doc created", tokenDoc);
-        if (!tokenDoc) return;
-        (tokenDoc)?.update({ movementAction: "blink" });
-        // const token = game.canvas?.tokens?.get(tokenDoc.id);
-        // if (token) {
-        //     token.onclick = TokenInteractionManager.handleTokenClick;
-        //     Logger.log("Tocken created", game.canvas?.tokens?.get(tokenDoc.id));
-        //     const module = socketlib.modules.get(flag.scope);
-        //     if (module) {
-        //         game.users?.forEach((u) => {
-        //             if (!u.isGM && u.active) {
-        //                 module.executeAsUser("addClickHandler", u.id, token.id);
-        //             }
-        //         });
-        //     }
-        // }
+        const tile = await this.__createTile(tileDoc);
+        if (!tile) return;
 
-        await tokenDoc.setFlag(
+        await tileDoc.setFlag(
             flag.scope,
             flag.lightIdName,
             ambientLightDoc.id
         );
         await ambientLightDoc.setFlag(
             flag.scope,
-            flag.tokenIdName,
-            tokenDoc.id
+            flag.tileIdName,
+            tileDoc.id
         );
 
-        return tokenDoc;
+        return tileDoc;
     };
 
-    static changeTokenPositions = async (
-        tokenId,
+    static changeTilePositions = async (
+        tileId,
         posX,
         posY
     ) => {
         if (!game.user?.isGM) return false;
 
-        const token = game.canvas?.tokens?.get(tokenId);
-        if (!token) {
-            Logger.log(`Couldn't find a token with id ${tokenId}`);
+        const tile = game.canvas?.tiles?.get(tileId);
+        if (!tile) {
+            Logger.log(`Couldn't find a tile with id ${tileId}`);
             return false;
         }
 
         const updates = {};
 
         if (posX === 0 || posX) {
-            const x = this.culcObjPosition(posX, "X");
+            const x = this.calcObjPosition(posX, "X");
             updates.x = x;
             Logger.log(`POS X UPDATED: ${x}`);
         }
 
         if (posY === 0 || posY) {
-            const y = this.culcObjPosition(posY, "Y");
+            const y = this.calcObjPosition(posY, "Y")
             updates.y = y;
             Logger.log(`POS Y UPDATED: ${y}`);
         }
 
         if (Object.keys(updates).length > 0) {
             try {
-                await token.document.update(updates);
+                await tile.document.update(updates);
             } catch (error) {
-                Logger.error(`Unnable to update token [${tokenId}]`);
+                Logger.error(`Unnable to update tile [${tileId}]`);
                 console.log(error);
             }
         }
@@ -197,7 +144,7 @@ export class LightTextureController {
         return true;
     };
 
-    static culcObjPosition = (
+    static calcObjPosition = (
         light,
         axis
     ) => {
