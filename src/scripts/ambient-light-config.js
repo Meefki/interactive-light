@@ -12,18 +12,15 @@ export class AmbientLightConfig {
     static #textInput = "text-input";
     static #inputIdFormat = "${appId}.${flagPath}.${type}";
 
-    //#region Hooks
     //#region trackLightPositionHook
 
     static trackLightPositionHook = (
         doc,
         change
     ) => {
-        Logger.log("=========================================================");
-        Logger.log("---------------------------------------------------------");
         Logger.log(
             "AmbientLight updated!",
-            document,
+            doc,
             change,
             "x" in change,
             "y" in change,
@@ -37,12 +34,12 @@ export class AmbientLightConfig {
                 flag.scope,
                 flag.interactiveName
             );
-            const tokenId = doc.getFlag(flag.scope, flag.tokenIdName);
+            const tileId = doc.getFlag(flag.scope, flag.tileIdName);
 
-            Logger.log(`tokenId: ${tokenId}`);
-            if (!interactive || !tokenId) return;
-            const ok = LightTextureController.changeTokenPositions(
-                tokenId,
+            Logger.log(`tileId: ${tileId}`);
+            if (!interactive || !tileId) return;
+            const ok = LightTextureController.changeTilePositions(
+                tileId,
                 change.x,
                 change.y
             );
@@ -64,10 +61,10 @@ export class AmbientLightConfig {
     ) => {
         Logger.log(`AMBIENT LIGHT ${doc.id} WAS DELETED`);
 
-        const tokenId = doc.getFlag(flag.scope, flag.tokenIdName);
+        const tileId = doc.getFlag(flag.scope, flag.tileIdName);
 
-        if (!tokenId) return;
-        await LightTextureController.delete(tokenId, null);
+        if (!tileId) return;
+        await LightTextureController.delete(tileId, null);
     };
 
     //#endregion
@@ -266,7 +263,7 @@ export class AmbientLightConfig {
         if (active === 'interactiveLight') link.classList.add('active');
 
         const icon = document.createElement('i');
-        icon.classList.add("fa-solid", "fa-fire-flame-simple"); //fa-fire
+        icon.classList.add("fa-solid", "fa-fire-flame-simple");
         icon.inert = true;
 
         const title = document.createElement('span');
@@ -336,9 +333,9 @@ export class AmbientLightConfig {
         if (!lightId) return;
         const ambientLight = canvas.lighting?.get(lightId);
         if (!ambientLight) return;
-        const tokenId = ambientLight.document.getFlag(
+        const tileId = ambientLight.document.getFlag(
             flag.scope,
-            flag.tokenIdName
+            flag.tileIdName
         );
         let pathComputing =
             pathInput.value ||
@@ -348,29 +345,23 @@ export class AmbientLightConfig {
 
         if (interactiveChk.checked) {
             const changed = await LightTextureController.updateTextureSource(
-                tokenId,
+                tileId,
                 lightId,
                 path
             );
             if (changed) return;
 
             Logger.log("CREATING TOKEN");
-            LightTextureController.createActorToken(
+            LightTextureController.createTile(
                 path,
-                LightTextureController.culcObjPosition(
-                    ambientLight.position._x,
-                    "X"
-                ),
-                LightTextureController.culcObjPosition(
-                    ambientLight.position._y,
-                    "Y"
-                ),
+                ambientLight.position._x,
+                ambientLight.position._y,
                 ambientLight.document
-            ).then((tokenDoc) => {
-                Logger.log("DATA", tokenDoc);
+            ).then((tileDoc) => {
+                Logger.log("DATA", tileDoc);
             });
         } else {
-            LightTextureController.delete(tokenId, ambientLight.document);
+            LightTextureController.delete(tileId, ambientLight.document);
         }
     };
 
@@ -401,6 +392,5 @@ export class AmbientLightConfig {
         );
     };
 
-    //#endregion
     //#endregion
 }

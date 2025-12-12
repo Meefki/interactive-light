@@ -1,5 +1,4 @@
 import { flag } from "./constants/flags.js";
-import { TokenInteractionManager } from "./token-interaction-manager.js";
 import { Logger } from "./utils/logger.js";
 
 export class PermissionManager {
