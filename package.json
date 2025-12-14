@@ -1,8 +1,9 @@
 {
   "scripts": {
-    "build": "esbuild src/interactive-light.js --bundle --format=esm --minify --outfile=dist/interactive-light-min.js"
+    "build": "node build.js"
   },
   "devDependencies": {
-    "esbuild": "^0.23.0"
+    "esbuild": "^0.23.0",
+    "esbuild-plugin-copy": "^2.1.1"
   }
 }

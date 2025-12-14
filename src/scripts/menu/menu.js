@@ -1,5 +1,6 @@
-import { locale } from "../constants/locale";
-import { Logger } from "../utils/logger";
+import { locale } from "../constants/locale.js";
+import { Logger } from "../utils/logger.js";
+import { openLightPrefabBrowser } from "../prefab-window/light-prefab-browser-window.js";
 
 export class Menu {
     static registerMenu(controls) {
@@ -15,7 +16,11 @@ export class Menu {
             icon: 'fa-solid fa-fire-flame-simple',
             button: true,
             onChange: () => {
-                ui.notifications.info("Моя кнопка в Lighting нажата!");
+                try {
+                    openLightPrefabBrowser();
+                } catch (e) {
+                    Logger.error("Unnable to create and render prefab window", e);
+                }
             },
             visible: true
         };

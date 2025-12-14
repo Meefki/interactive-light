@@ -11,7 +11,7 @@ export const LogLevels = {
 }
 
 export class Logger {
-    static minLogLevel = LogLevels.warn;
+    static minLogLevel = LogLevels.debug;
 
     static log(...object) {
         if (this.minLogLevel > LogLevels.debug) return;

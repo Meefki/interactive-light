@@ -5,8 +5,6 @@ import { Logger } from "../utils/logger.js";
 export class TileInteractionManager {
     static HOOK_NAME = "leftClickTile";
 
-    static init = () => { }
-
     static AddClickHandlers() {
         this.AddSingleClickWrapper();
         this.AddDoubleClickWrapper();

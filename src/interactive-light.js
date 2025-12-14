@@ -1,3 +1,3 @@
-import * as register from "./scripts/hooks.js";
+import * as init from "./scripts/init.js";
 
-register.initHooks();
+init.proceed();
