@@ -26,7 +26,11 @@
             "Prefabs": {
                 "Lable": "Prefabs",
                 "Hint": "Prefabs of Interactive Light",
-                "Name": "Prefabs of Interactive Light"
+                "Name": "Prefabs of Interactive Light",
+
+                "Browser": {
+                    "Title": "Light Sources Prefabs"
+                }
             }
         }
     }

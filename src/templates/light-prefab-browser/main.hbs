@@ -1,0 +1,63 @@
+<section class="prefab-browser">
+    <section class="header">
+        <input type="search" class="search" placeholder="Поиск префаба..." value="{{search}}" data-action="search" />
+
+        <div class="tag-filters">
+            {{#each allTags}}
+            <button type="button" class="tag-filter {{#if (includes ../activeTags this)}}active{{/if}}"
+                data-action="toggleTag" data-tag="{{this}}">
+                {{this}}
+            </button>
+            {{/each}}
+        </div>
+    </section>
+
+    <section class="standard-form prefab-container-form scrollable">
+        <fieldset class="prefab-container">
+            {{#if prefabs}}
+            <section class="grid grid-3col prefab-grid">
+
+                {{#each prefabs}}
+                <fieldset
+                    class="prefab-card {{#if (eq ../activePrefab id)}}active{{/if}}" 
+                    data-action="selectPrefab"
+                    data-id="{{id}}">
+
+                    {{!-- Превью --}}
+                    <div class="preview">
+                        {{#if preview}}
+                        <img src="{{preview}}" alt="{{name}}" />
+                        {{else}}
+                        <i class="fa-solid fa-lightbulb"></i>
+                        {{/if}}
+                    </div>
+
+                    {{!-- Название --}}
+                    <div class="name">
+                        {{name}}
+                    </div>
+
+                    {{!-- Теги --}}
+                    {{#if tags}}
+                    <div class="tags">
+                        {{#each tags}}
+                        <span class="tag">{{this}}</span>
+                        {{/each}}
+                    </div>
+                    {{/if}}
+
+                </fieldset>
+                {{/each}}
+            </section>
+            {{else}}
+            <section>
+                <p>Префабы не найдены</p>
+            </section>
+            {{/if}}
+        </fieldset>
+    </section>
+
+    <section class="footer">
+        <button>Delete</button>
+    </section>
+</section>

@@ -1,0 +1,46 @@
+.prefab-browser {
+    display: flex !important;
+    flex-direction: column;
+    height: 100%;
+    gap: 1rem !important;
+}
+
+.prefab-browser .header {
+    flex: 0 0 auto;
+}
+
+/* .prefab-wrowser-window .window-content {
+    display: flex;
+    flex-direction: column;
+} */
+
+/* .prefab-browser .prefab-container-form {
+    
+} */
+
+.prefab-browser .prefab-container-form .prefab-container {
+    flex: 1;
+    /* min-width: 460px; 
+    min-height: 325px !important;
+    height: 100%; */
+}
+
+/* .prefab-browser .prefab-container .prefab-grid {
+
+} */
+
+.prefab-browser .prefab-container-form .prefab-container .prefab-grid .prefab-card {
+    display: flex;
+    flex-direction: column;
+    height: 150px;
+    width: 100%;
+}
+
+.prefab-browser .prefab-container-form .prefab-container .prefab-grid .prefab-card .preview {
+    width: 100px;
+    height: 100px;
+}
+
+.prefab-browser .footer {
+    flex: 0 0 auto;
+}

@@ -16,6 +16,12 @@ esbuild.build({
       assets: {
         from: ["./src/templates/**/*.hbs"],
         to: ["./templates"]
+      },
+    }),
+    copy({
+      assets: {
+        from: ["./src/styles/**/*.css"],
+        to: ["./styles"]
       }
     })
   ]

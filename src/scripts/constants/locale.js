@@ -6,6 +6,7 @@ export const name = 'Name';
 export const title = 'Title';
 
 export const config = 'Config';
+export const browser = 'Browser';
 
 export const menu = 'Menu';
 export const prefabs = 'Prefabs';
@@ -19,6 +20,8 @@ export const tablName = `${key}.${config}.TabName`;
 export const menuPrefabsLabel = `${key}.${menu}.${prefabs}.${label}`;
 export const menuPrefabsName = `${key}.${menu}.${prefabs}.${name}`;
 export const menuPrefabsHint = `${key}.${menu}.${prefabs}.${hint}`;
+
+export const lightPrefabBrowserTitle = `${key}.${menu}.${prefabs}.${browser}.${title}`;
 
 export function getKeyed(path) {
     return `${key}.${path}`;

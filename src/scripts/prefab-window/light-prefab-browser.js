@@ -8,12 +8,16 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
 ) {
     static DEFAULT_OPTIONS = {
         id: "light-prefabs",
-        // position: { 
-        //     height: 200
-        // },
+        classes: ["prefab-browser-window"],
+        position: { 
+            height: 670,
+            width: 570,
+            left: 105,
+            top: 60
+        },
         window: {
             resizable: true,
-            title: "Префабы Источников Света"
+            title: "INTERACTIVE_LIGHT.Menu.Prefabs.Browser.Title",
         },
         form: {
             submitOnChange: true
@@ -21,13 +25,74 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
     };
 
     static PARTS = {
-        main: {
-            template: "modules/interactive-light/dist/templates/light-prefab-browser.hbs"
-        }
+        main: { template: "modules/interactive-light/dist/templates/light-prefab-browser/main.hbs" }
     };
 
+    activePrefab = null;
+    search = "";
+    allTags = [];
+    activeTags = [];
+
     async _prepareContext(context, options) {
-        context.message = "OK";
-        return context;
+        const _context = {
+            ...await super._prepareContext(context)
+        };
+        _context.prefabs = this.__mockPrefabs();
+        return _context;
+    }
+
+    __mockPrefabs() {
+        return [
+            {
+                preview: '',
+                name: 'test1',
+                tags: ['tag1', 'tag2', 'tag3']
+            },
+            {
+                preview: '',
+                name: 'test2',
+                tags: ['tag1', 'tag2', 'tag3']
+            },
+            {
+                preview: '',
+                name: 'test3',
+                tags: ['tag1', 'tag2', 'tag3']
+            },
+            {
+                preview: '',
+                name: 'test4',
+                tags: ['tag1', 'tag2', 'tag3']
+            },
+            {
+                preview: '',
+                name: 'test5',
+                tags: ['tag1', 'tag2', 'tag3']
+            },
+            {
+                preview: '',
+                name: 'test6',
+                tags: ['tag1', 'tag2', 'tag3']
+            },
+            {
+                preview: '',
+                name: 'test7',
+                tags: ['tag1', 'tag2', 'tag3']
+            },
+            {
+                preview: '',
+                name: 'test8',
+                tags: ['tag1', 'tag2', 'tag3']
+            },
+            {
+                preview: '',
+                name: 'test9',
+                tags: ['tag1', 'tag2', 'tag3']
+            },
+            {
+                preview: '',
+                name: 'test10',
+                tags: ['tag1', 'tag2', 'tag3']
+            }
+        ]
     }
 }
