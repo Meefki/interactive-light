@@ -13,46 +13,42 @@
     </section>
 
     <section class="standard-form prefab-container-form scrollable">
-        <fieldset class="prefab-container">
+        <fieldset class="prefab-container scrollable">
             {{#if prefabs}}
-            <section class="grid grid-3col prefab-grid">
+            <div class="grid grid-3col prefab-grid">
 
                 {{#each prefabs}}
-                <fieldset
-                    class="prefab-card {{#if (eq ../activePrefab id)}}active{{/if}}" 
-                    data-action="selectPrefab"
-                    data-id="{{id}}">
+                <fieldset class="prefab-card">
+                    <input class="input-checkbox" type="radio" name="prefab" id="{{id}}" data-id="{{id}}"
+                        data-action="selectPrefab" />
+                    <label for="{{id}}" class="prefab-label">
+                        <div class="preview">
+                            {{#if preview}}
+                            <img src="{{preview}}" alt="{{name}}" />
+                            {{else}}
+                            <i class="fa-solid fa-lightbulb"></i>
+                            {{/if}}
+                        </div>
 
-                    {{!-- Превью --}}
-                    <div class="preview">
-                        {{#if preview}}
-                        <img src="{{preview}}" alt="{{name}}" />
-                        {{else}}
-                        <i class="fa-solid fa-lightbulb"></i>
+                        <div class="name">
+                            <span>{{name}}</span>
+                        </div>
+
+                        {{#if tags}}
+                        <div class="tags">
+                            {{#each tags}}
+                            <span class="tag">{{this}}</span>
+                            {{/each}}
+                        </div>
                         {{/if}}
-                    </div>
-
-                    {{!-- Название --}}
-                    <div class="name">
-                        {{name}}
-                    </div>
-
-                    {{!-- Теги --}}
-                    {{#if tags}}
-                    <div class="tags">
-                        {{#each tags}}
-                        <span class="tag">{{this}}</span>
-                        {{/each}}
-                    </div>
-                    {{/if}}
-
+                    </label>
                 </fieldset>
                 {{/each}}
-            </section>
+            </div>
             {{else}}
-            <section>
-                <p>Префабы не найдены</p>
-            </section>
+            <div>
+                <h2>Префабы не найдены</h2>
+            </div>
             {{/if}}
         </fieldset>
     </section>

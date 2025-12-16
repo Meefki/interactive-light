@@ -9,36 +9,72 @@
     flex: 0 0 auto;
 }
 
-/* .prefab-wrowser-window .window-content {
-    display: flex;
-    flex-direction: column;
-} */
-
-/* .prefab-browser .prefab-container-form {
-    
-} */
+.prefab-browser .prefab-container-form {
+    flex: 1;
+    overflow-y: hidden !important;
+}
 
 .prefab-browser .prefab-container-form .prefab-container {
     flex: 1;
-    /* min-width: 460px; 
-    min-height: 325px !important;
-    height: 100%; */
+    min-width: 480px;
+    min-height: 510px !important;
 }
 
-/* .prefab-browser .prefab-container .prefab-grid {
-
-} */
-
-.prefab-browser .prefab-container-form .prefab-container .prefab-grid .prefab-card {
+.prefab-browser
+    .prefab-container-form
+    .prefab-container
+    .prefab-grid
+    .prefab-card {
     display: flex;
+    justify-content: baseline;
     flex-direction: column;
-    height: 150px;
+    align-items: center;
+    height: auto;
     width: 100%;
 }
 
-.prefab-browser .prefab-container-form .prefab-container .prefab-grid .prefab-card .preview {
+.prefab-browser
+    .prefab-container-form
+    .prefab-container
+    .prefab-grid
+    .prefab-card
+    .preview {
+    display: flex;
     width: 100px;
     height: 100px;
+}
+
+.prefab-browser
+    .prefab-container-form
+    .prefab-container
+    .prefab-grid
+    .input-checkbox {
+    display: none;
+}
+
+.prefab-browser
+    .prefab-container-form
+    .prefab-container
+    .prefab-grid
+    .prefab-label {
+    display: flex;
+    justify-content: baseline;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}
+
+.prefab-browser
+    .prefab-container-form
+    .prefab-container
+    .prefab-grid
+    .prefab-card:has(input:checked) {
+    background: radial-gradient(
+        ellipse at center,
+        rgba(0, 0, 0, 0) 40%,
+        var(--color-fieldset-border) 100%
+    ) !important;
 }
 
 .prefab-browser .footer {
