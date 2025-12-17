@@ -1,13 +1,15 @@
 <section class="prefab-browser">
     <section class="header">
-        <input type="search" class="search" placeholder="Поиск префаба..." value="{{search}}" data-action="search" />
+        <input type="search" name="search" class="search" placeholder="Поиск префаба..." value="{{search}}" data-action="search" />
 
-        <div class="tag-filters">
+        <div class="tag-filters tags">
             {{#each allTags}}
-            <button type="button" class="tag-filter {{#if (includes ../activeTags this)}}active{{/if}}"
-                data-action="toggleTag" data-tag="{{this}}">
-                {{this}}
-            </button>
+            <input class="tag-input-checkbox" type="checkbox" id="prefab-tag-{{../id}}-{{value}}"
+                data-prefab-id="{{../id}}" data-id="{{value}}" data-action="selectTag" />
+            <label for="prefab-tag-{{../id}}-{{value}}" class="tag-label {{#if (includes @root.activeTags this)}}active{{/if}}"
+                style="--tag-color: {{color}};">
+                <span class="tag-text">{{value}}</span>
+            </label>
             {{/each}}
         </div>
     </section>
@@ -15,7 +17,8 @@
     <section class="standard-form prefab-container-form scrollable">
         <fieldset class="prefab-container scrollable">
             {{#if prefabs}}
-            <div class="grid grid-3col prefab-grid">
+            <div class="prefab-grid">
+                {{!-- grid grid-3col  --}}
 
                 {{#each prefabs}}
                 <fieldset class="prefab-card">
@@ -39,10 +42,9 @@
                             {{#each tags}}
                             <input class="tag-input-checkbox" type="checkbox" id="prefab-tag-{{../id}}-{{value}}"
                                 data-prefab-id="{{../id}}" data-id="{{value}}" data-action="selectTag" />
-                            <label for="prefab-tag-{{../id}}-{{value}}"
-                                class="tag-label {{#if (includes @root.activeTags value)}}active{{/if}}"
-                                style="border-color: {{color}}">
-                                <span>{{value}}</span>
+                            <label for="prefab-tag-{{../id}}-{{value}}" class="tag-label {{#if (includes @root.activeTags this)}}active{{/if}}"
+                                style="--tag-color: {{color}};">
+                                <span class="tag-text">{{value}}</span>
                             </label>
                             {{/each}}
                         </div>
@@ -61,5 +63,6 @@
 
     <section class="footer">
         <button>Delete</button>
+        <button data-action="clearFilters">Clear Filters</button>
     </section>
 </section>

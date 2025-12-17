@@ -15,33 +15,36 @@ export function proceed() {
     Hooks.once(hook_alias.init, (data) => {
         if (LibManager.moduleDepsCheck()) return;
 
-        __initHelpers(data);
-        __initHooks(data);
-        __initApp(data);
+        Initializer.__initHelpers(data);
+        Initializer.__initHooks(data);
+        Initializer.__initApp(data);
         preloadTemplates();
     });
 
     Logger.info("Hooks Init Finished!");
 }
 
-function __initHooks(data) {
-    Hooks.on(
-        hook_alias.renderAmbientLightConfig,
-        AmbientLightConfig.renderLightConfigHook
-    );
-    Hooks.on(hook_alias.updateAmbientLight, AmbientLightConfig.trackLightPositionHook);
-    Hooks.on(hook_alias.deleteAmbientLight, AmbientLightConfig.deleteAmbientLightHook);
-    Hooks.on(hook_alias.canvasReady, settings.initSettings);
-    Hooks.on(hook_alias.getSceneControlButtons, Menu.registerMenu);
-}
+class Initializer {
 
-function __initApp(data) {
-    TileInteractionManager.AddClickHandlers();
-    PermissionManager.init();
-}
-
-function __initHelpers(data) {
-    registedHelpers();
+    static __initHooks(data) {
+        Hooks.on(
+            hook_alias.renderAmbientLightConfig,
+            AmbientLightConfig.renderLightConfigHook
+        );
+        Hooks.on(hook_alias.updateAmbientLight, AmbientLightConfig.trackLightPositionHook);
+        Hooks.on(hook_alias.deleteAmbientLight, AmbientLightConfig.deleteAmbientLightHook);
+        Hooks.on(hook_alias.canvasReady, settings.initSettings);
+        Hooks.on(hook_alias.getSceneControlButtons, Menu.registerMenu);
+    }
+    
+    static __initApp(data) {
+        TileInteractionManager.AddClickHandlers();
+        PermissionManager.init();
+    }
+    
+    static __initHelpers(data) {
+        registedHelpers();
+    }    
 }
 
 export * as init from "./init.js";

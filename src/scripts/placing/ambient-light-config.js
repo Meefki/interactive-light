@@ -85,20 +85,20 @@ export class AmbientLightConfig {
         const isInteractive =
             document.getFlag(flag.scope, flag.interactiveName) ?? false;
 
-        const interactiveElement = this.__createInteractiveCheckboxHtmlElement(
+        const interactiveElement = this.#createInteractiveCheckboxHtmlElement(
             app.id,
             isInteractive
         );
 
         const path = document.getFlag(flag.scope, flag.pathName);
-        const pathElement = this.__createInteractivePathHtmlElement(
+        const pathElement = this.#createInteractivePathHtmlElement(
             app.id,
             path,
             isInteractive
         );
 
         const clickOptions = document.getFlag(flag.scope, flag.clickOptionsName);
-        const clickOptionsElement = this.__createInteractiveLightClickOptionsHtmlElement(
+        const clickOptionsElement = this.#createInteractiveLightClickOptionsHtmlElement(
             app.id,
             clickOptions,
             isInteractive
@@ -108,10 +108,10 @@ export class AmbientLightConfig {
             '[data-application-part="tabs"]'
         );
         const activeTabName = app.tabGroups.sheet;
-        const tabTitle = this.__createTabHtmlElement(activeTabName);
+        const tabTitle = this.#createTabHtmlElement(activeTabName);
         if (nav) nav.appendChild(tabTitle);
         
-        const tabContent = this.__createTabContentHtmlElement(activeTabName);
+        const tabContent = this.#createTabContentHtmlElement(activeTabName);
         tabContent.appendChild(interactiveElement);
         tabContent.appendChild(pathElement);
         tabContent.appendChild(clickOptionsElement);
@@ -125,10 +125,10 @@ export class AmbientLightConfig {
             navBody.insertBefore(tabContent, footer);
         }
 
-        html.onsubmit = this.__onConfigSubmit;
+        html.onsubmit = this.#onConfigSubmit;
     };
 
-    static __createInteractiveCheckboxHtmlElement = (
+    static #createInteractiveCheckboxHtmlElement = (
         id,
         checked
     ) => {
@@ -150,7 +150,7 @@ export class AmbientLightConfig {
             flagPath: flag.interactive,
             type: this.#checkboxInput,
         });
-        input.onchange = this.__onInteractiveCheckboxChanged;
+        input.onchange = this.#onInteractiveCheckboxChanged;
 
         const hint = document.createElement("p");
         hint.className = "hint";
@@ -164,7 +164,7 @@ export class AmbientLightConfig {
         return formGroup;
     };
 
-    static __createInteractivePathHtmlElement = (
+    static #createInteractivePathHtmlElement = (
         appId,
         path,
         checked
@@ -201,7 +201,7 @@ export class AmbientLightConfig {
         return formGroup;
     };
 
-    static __createInteractiveLightClickOptionsHtmlElement = (
+    static #createInteractiveLightClickOptionsHtmlElement = (
         appId, 
         option,
         checked
@@ -255,7 +255,7 @@ export class AmbientLightConfig {
         return formGroup;
     }
 
-    static __createTabHtmlElement = (active) => {
+    static #createTabHtmlElement = (active) => {
         const link = document.createElement('a');
         link.dataset.action = "tab";
         link.dataset.group = "sheet";
@@ -275,7 +275,7 @@ export class AmbientLightConfig {
         return link;
     }
 
-    static __createTabContentHtmlElement = (active) => {
+    static #createTabContentHtmlElement = (active) => {
         const section = document.createElement('section');
         section.classList.add("tab", "standard-form", "scrollable");
         if (active === "interactiveLight") section.classList.add('active');
@@ -286,7 +286,7 @@ export class AmbientLightConfig {
         return section;
     }
 
-    static __onInteractiveCheckboxChanged = (ev) => {
+    static #onInteractiveCheckboxChanged = (ev) => {
         const input = ev.target;
         if (!input) return;
 
@@ -321,14 +321,14 @@ export class AmbientLightConfig {
         if (clickOptionsFormGroup) clickOptionsFormGroup.hidden = !checked;
     };
 
-    static __onConfigSubmit = async (ev) => {
+    static #onConfigSubmit = async (ev) => {
         Logger.log("AMBIENT LIGHT CONFIGURATION SUBMITTED");
 
-        const interactiveChk = this.__getInteractiveCheckbox(
+        const interactiveChk = this.#getInteractiveCheckbox(
             ev.target
         );
-        const pathInput = this.__getPathInput(ev.target);
-        const appId = this.__getAppIdFromInteractiveCheckbox(interactiveChk);
+        const pathInput = this.#getPathInput(ev.target);
+        const appId = this.#getAppIdFromInteractiveCheckbox(interactiveChk);
         const lightId = appId.split("-").pop();
         if (!lightId) return;
         const ambientLight = canvas.lighting?.get(lightId);
@@ -365,7 +365,7 @@ export class AmbientLightConfig {
         }
     };
 
-    static __getInteractiveCheckbox = (
+    static #getInteractiveCheckbox = (
         form
     ) => {
         return form.querySelector(
@@ -373,11 +373,11 @@ export class AmbientLightConfig {
         );
     };
 
-    static __getPathInput = (form) => {
+    static #getPathInput = (form) => {
         return form.querySelector(`[name="${flag.path}"]`);
     };
 
-    static __getAppIdFromInteractiveCheckbox = (
+    static #getAppIdFromInteractiveCheckbox = (
         interactiveChk
     ) => {
         return interactiveChk.id.slice(

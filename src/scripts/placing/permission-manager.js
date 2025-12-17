@@ -4,10 +4,10 @@ import { Logger } from "../utils/logger.js";
 export class PermissionManager {
     static init = () => {
         socketlib.registerModule(flag.scope);
-        this.__socketRegisterToggleLightHidden();
+        this.#socketRegisterToggleLightHidden();
     };
 
-    static __socketRegisterToggleLightHidden = () => {
+    static #socketRegisterToggleLightHidden = () => {
         const socket = socketlib.modules.get(flag.scope);
         if (!socket) return;
         socket.register("toggleLightHidden", (lightId) => {
