@@ -1,0 +1,95 @@
+.prefab-browser {
+    display: flex !important;
+    flex-direction: column;
+    height: 100%;
+    gap: 1rem !important;
+
+    .header {
+        flex: 0 0 auto;
+    }
+
+    .prefab-container-form {
+        flex: 1;
+        overflow-y: hidden !important;
+
+        .prefab-container {
+            flex: 1;
+            min-width: 480px;
+            min-height: 510px !important;
+
+            .prefab-grid {
+                .prefab-card {
+                    display: flex;
+                    justify-content: baseline;
+                    flex-direction: column;
+                    align-items: center;
+                    height: auto;
+                    width: 100%;
+
+                    .preview {
+                        flex: 0 0 auto;
+                        display: flex;
+                        width: 100px;
+                        height: 100px;
+                    }
+                }
+
+                .prefab-input-checkbox {
+                    display: none;
+                }
+
+                .prefab-label {
+                    display: flex;
+                    justify-content: baseline;
+                    flex-direction: column;
+                    align-items: center;
+                    height: 100%;
+                    width: 100%;
+                    gap: 0.5rem;
+
+                    .name {
+                        flex: 1;
+                        text-align: center;
+                    }
+
+                    .tags {
+                        flex: 0 0 auto;
+                        display: flex;
+                        flex-direction: row;
+                        flex-wrap: wrap;
+                        justify-content: baseline;
+                        align-items: start;
+                        width: 100%;
+                        gap: 0.3rem;
+
+                        .tag-label {
+                            border-style: solid;
+                            border-width: 1px;
+                            /* border-color: var(--color-fieldset-border); */
+                            border-radius: 4px;
+                            padding: 2px;
+                        }
+
+                        .tag-input-checkbox {
+                            display: none;
+                        }
+                    }
+                }
+
+                .prefab-card {
+                    &:has(.prefab-input-checkbox:checked) {
+                        background: radial-gradient(
+                            ellipse at center,
+                            rgba(0, 0, 0, 0) 40%,
+                            var(--color-fieldset-border) 100%
+                        ) !important;
+                    }
+                }
+            }
+        }
+    }
+
+    .footer {
+        flex: 0 0 auto;
+    }
+}

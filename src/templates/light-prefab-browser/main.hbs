@@ -19,7 +19,7 @@
 
                 {{#each prefabs}}
                 <fieldset class="prefab-card">
-                    <input class="input-checkbox" type="radio" name="prefab" id="{{id}}" data-id="{{id}}"
+                    <input class="prefab-input-checkbox" type="radio" name="prefab" id="{{id}}" data-id="{{id}}"
                         data-action="selectPrefab" />
                     <label for="{{id}}" class="prefab-label">
                         <div class="preview">
@@ -37,7 +37,13 @@
                         {{#if tags}}
                         <div class="tags">
                             {{#each tags}}
-                            <span class="tag">{{this}}</span>
+                            <input class="tag-input-checkbox" type="checkbox" id="prefab-tag-{{../id}}-{{value}}"
+                                data-prefab-id="{{../id}}" data-id="{{value}}" data-action="selectTag" />
+                            <label for="prefab-tag-{{../id}}-{{value}}"
+                                class="tag-label {{#if (includes @root.activeTags value)}}active{{/if}}"
+                                style="border-color: {{color}}">
+                                <span>{{value}}</span>
+                            </label>
                             {{/each}}
                         </div>
                         {{/if}}
