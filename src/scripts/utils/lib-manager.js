@@ -18,4 +18,19 @@ export class LibManager {
 
         return true;
     }
+
+    static moduleDepsCheck() {
+        let libError = false;
+        if (!LibManager.checkLibWrapper()) {
+            Logger.error("lib-wrapper module wasn't found");
+            libError = true;
+        }
+
+        if (!LibManager.checkSocketLib()) {
+            Logger.error("socketlib module wasn't found");
+            libError = true;
+        }
+
+        return libError;
+    }
 }

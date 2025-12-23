@@ -1,11 +1,9 @@
-import { flag } from "./constants/flags.js";
+import { flag } from "../constants/flags.js";
 import { PermissionManager } from "./permission-manager.js";
-import { Logger } from "./utils/logger.js";
+import { Logger } from "../utils/logger.js";
 
 export class TileInteractionManager {
     static HOOK_NAME = "leftClickTile";
-
-    static init = () => { }
 
     static AddClickHandlers() {
         this.AddSingleClickWrapper();
@@ -54,7 +52,7 @@ export class TileInteractionManager {
             return;
         }
 
-        const lightInfo = TileInteractionManager.__getLightConfig(t);
+        const lightInfo = TileInteractionManager.#getLightConfig(t);
         if (!lightInfo || !lightInfo.lightId) return;
 
         await PermissionManager.toggleLightHidden(lightInfo.lightId);
@@ -66,15 +64,15 @@ export class TileInteractionManager {
         });
     }
 
-    static __getLightConfig(t) {
+    static #getLightConfig(t) {
         if (!t) {
-            Logger.log("TileInteractionManager.__getLightConfig: Empty Tile");
+            Logger.log("TileInteractionManager.#getLightConfig: Empty Tile");
             return;
         }
 
         const lightId = t.document.getFlag(flag.scope, flag.lightIdName);
         if (!lightId) {
-            Logger.log("TileInteractionManager.__getLightConfig: Empty light ID");
+            Logger.log("TileInteractionManager.#getLightConfig: Empty light ID");
             return;
         }
         const lights = game.canvas.lighting.objects.children;
@@ -84,9 +82,9 @@ export class TileInteractionManager {
                 const mode = filteredLights[0].document.getFlag(flag.scope, flag.clickOptionsName);
                 return { lightId, mode };
             }
-            Logger.log("TileInteractionManager.__getLightConfig: Light not found");
+            Logger.log("TileInteractionManager.#getLightConfig: Light not found");
         }
-        Logger.log("TileInteractionManager.__getLightConfig: No lights on the layer");
+        Logger.log("TileInteractionManager.#getLightConfig: No lights on the layer");
     }
 
     //#region Canvas Work

@@ -1,6 +1,6 @@
-import { flag } from "./constants/flags.js";
-import { settings } from "./constants/settings.js";
-import { Logger } from "./utils/logger.js";
+import { flag } from "../constants/flags.js";
+import { settings } from "../constants/settings.js";
+import { Logger } from "../utils/logger.js";
 
 export class LightTextureController {
     static updateTextureSource = async (
@@ -61,7 +61,7 @@ export class LightTextureController {
         }
     };
 
-    static __createTile = async (tileDoc) => 
+    static #createTile = async (tileDoc) => 
         await new foundry.canvas.placeables.Tile(tileDoc);
 
     static createTile = async (
@@ -88,7 +88,7 @@ export class LightTextureController {
         Logger.log("tile doc created", tileDoc);
         if (!tileDoc) return;
 
-        const tile = await this.__createTile(tileDoc);
+        const tile = await this.#createTile(tileDoc);
         if (!tile) return;
 
         await tileDoc.setFlag(
@@ -148,10 +148,10 @@ export class LightTextureController {
         light,
         axis
     ) => {
-        return light - this.__getTileSize(axis) / 2;
+        return light - this.#getTileSize(axis) / 2;
     };
 
-    static __getTileSize = (axis) => {
+    static #getTileSize = (axis) => {
         switch (axis) {
             case "X":
                 return settings.tileWidth;
