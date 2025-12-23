@@ -1,0 +1,10 @@
+<div class="tag-filters tags">
+    {{#each allTags}}
+    <input class="tag-input-checkbox" type="checkbox" id="prefab-tag-{{../id}}-{{value}}" data-prefab-id="{{../id}}"
+        data-id="{{value}}" data-action="selectTag" />
+    <label for="prefab-tag-{{../id}}-{{value}}" class="tag-label {{#if (includes @root.activeTags this)}}active{{/if}}"
+        style="--tag-color: {{color}};">
+        <span class="tag-text">{{value}}</span>
+    </label>
+    {{/each}}
+</div>

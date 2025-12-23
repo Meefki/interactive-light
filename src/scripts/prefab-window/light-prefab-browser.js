@@ -17,7 +17,6 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
             selectPrefab: LightPrefabBrowserV2.#onPrefabClick,
             deletePrefab: LightPrefabBrowserV2.#deletePrefab,
             selectTag: LightPrefabBrowserV2.#onTagClick,
-            // search: LightPrefabBrowserV2.#search,
             clearFilters: LightPrefabBrowserV2.#clearFilters
         },
         classes: ["prefab-browser-window"],
@@ -33,14 +32,19 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         }
     };
 
-    // TODO: separate to header, prefabs-grid and footer
     static PARTS = {
-        main: { template: "modules/interactive-light/dist/templates/light-prefab-browser/main.hbs" }
+        header: { template: "modules/interactive-light/dist/templates/light-prefab-browser/header.hbs" },
+        headerTags: { template: "modules/interactive-light/dist/templates/light-prefab-browser/header-tags.hbs" },
+        content: { template: "modules/interactive-light/dist/templates/light-prefab-browser/content.hbs" },
+        footer: { template: "modules/interactive-light/dist/templates/light-prefab-browser/footer.hbs" },
     };
 
-    __prefabs = [];
-    __activePrefab = null;
     __search = "";
+
+    __prefabs = [];
+    __filteredPrefabs = [];
+    __activePrefab = "";
+
     __allTags = [];
     __activeTags = [];
 
@@ -66,31 +70,59 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         const _context = {
             ...await super._prepareContext(context)
         };
-        _context.prefabs = this.__prefabs = this.__filterPrefabs(this.__getPrefabs() ?? [], this.__search, this.__activeTags);
-        _context.allTags = this.__allTags = this.#getAllTags() ?? [];
-        _context.search = this.__search;
-        Logger.log("_prepareContext.#getAllTags:", this.__allTags);
-        Logger.log("LightPrefabBrowserV2.__search:", this.__search);
-        _context.activeTags = this.__activeTags;
+        this.__prefabs = this.__getPrefabs() ?? [];
+        this.__allTags = this.#getAllTags() ?? [];
         return _context;
+    }
+
+    async _preparePartContext(partId, context, options) {
+        context = await super._preparePartContext(partId, context, options);
+        switch (partId) {
+            case "header": return await this._prepareHeaderContext(context, options);
+            case "headerTags": return await this._prepareHeaderTagsContext(context, options);
+            case "content": return await this._prepareContentContext(context, options);
+        }
+        return context;
+    }
+
+    async _prepareHeaderContext(context, options) {
+        context.search = this.__search;
+        return context;
+    }
+
+    async _prepareHeaderTagsContext(context, options) {
+        context.allTags = this.__allTags = this.#getAllTags() ?? [];
+        context.activeTags = this.__activeTags;
+        Logger.log("_prepareHeaderTagsContext:");
+        return context;
+    }
+
+    async _prepareContentContext(context, options) {
+        context.prefabs = this.__filterPrefabs(this.__prefabs ?? [], this.__search, this.__activeTags);
+        context.activeTags = this.__activeTags;
+        context.selectedPrefabId = this.__activePrefab ?? "";
+
+        if (!this.__filteredPrefabs.map(fp => fp.id).includes(this.__activePrefab)) this.__activePrefab = "";
+        Logger.log("_prepareContentContext:", (this.__filteredPrefabs ?? []).map(fp => fp.id), this.__activePrefab, options);
+        return context;
     }
 
     static #onPrefabClick(event, target) {
         Logger.log("onPrefabClick:", event, target);
         if (event.altKey) {
             event.preventDefault();
-            LightPrefabBrowserV2.#openSettings(target);
+            this.__openSettings(target);
         }
-        else LightPrefabBrowserV2.#selectPrefab(target);
+        else this.__selectPrefab(target);
     }
 
-    static #openSettings(target) {
+    static __openSettings(target) {
         Logger.log("openSettings:", target);
         // TODO: ...
         throw "Method Not Implemented";
     }
 
-    static #selectPrefab(target) {
+    __selectPrefab(target) {
         Logger.log("selectPrefab:", target);
         if (this.__activePrefab === target.dataset.id) {
             this.__activePrefab = null;
@@ -99,7 +131,7 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
             this.__activePrefab = target.dataset.id;
         }
 
-        Logger.log("selectPrefab.#activePrefab:", this.__activePrefab);
+        Logger.log("selectPrefab.__activePrefab:", this.__activePrefab);
     }
 
     static #deletePrefab(event, target) {
@@ -135,7 +167,7 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
             }
         }
 
-        this.render({ force: true });
+        this.render({ force: true, parts: ["headerTags", "content"] });
     }
 
     #search(event) {
@@ -145,7 +177,7 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         if (this.__search === value) return;
 
         this.__search = value
-        this.render({ force: true });
+        this.render({ force: true, parts: ["headerTags", "content"] });
     }
 
     static #clearFilters(event, target) {
@@ -153,7 +185,7 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         this.__search = "";
         this.__activeTags = [];
 
-        this.render({ force: true });
+        this.render({ force: true, parts: ["headerTags", "content"] });
     }
 
     static #getPrefabById(prefabId) {
@@ -181,26 +213,26 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
 
     __filterPrefabs(prefabs, textSearch, tags) {
         Logger.log("__filterPrefabs:", prefabs, textSearch, tags);
-        let filteredPrefabs = [...prefabs];
+        this.__filteredPrefabs = [...prefabs];
         if (textSearch && textSearch.length) {
             const q = textSearch.trim().toLowerCase();
             if (q) {
-                filteredPrefabs = filteredPrefabs.filter(p => {
+                this.__filteredPrefabs = this.__filteredPrefabs.filter(p => {
                     const words = q.split(/\s+/);
                     return words.every(word => p.name.toLowerCase().includes(word));
                 });
-                Logger.log("__filterPrefabs.filteredPrefabs (text):", filteredPrefabs);
+                Logger.log("__filterPrefabs.this.__filteredPrefabs (text):", this.__filteredPrefabs);
             }
         }
 
         if (tags && tags.length) {
             const tagsValueSet = new Set(tags.map(t => t.value));
             Logger.log("__filterPrefabs.tagsValueSet (tags):", tagsValueSet);
-            filteredPrefabs = filteredPrefabs.filter(p => p.tags.some(t => tagsValueSet.has(t.value)));
-            Logger.log("__filterPrefabs.filteredPrefabs (tags):", filteredPrefabs);
+            this.__filteredPrefabs = this.__filteredPrefabs.filter(p => p.tags.some(t => tagsValueSet.has(t.value)));
+            Logger.log("__filterPrefabs.this.__filteredPrefabs (tags):", this.__filteredPrefabs);
         }
 
-        return filteredPrefabs;
+        return this.__filteredPrefabs;
     }
 
     #mockPrefabs() {
@@ -218,8 +250,7 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
                     { value: 'dark golden rod', color: 'DarkGoldenRod' },
                     { value: 'lemon', color: 'LemonChiffon' },
                     { value: 'blue', color: 'LightSkyBlue' },
-                    { value: 'gray', color: 'LightSlateGrey' },
-                    { value: 'gold', color: 'PaleGoldenRod' }
+                    { value: 'gray', color: 'LightSlateGrey' }
                 ]
             },
             {
