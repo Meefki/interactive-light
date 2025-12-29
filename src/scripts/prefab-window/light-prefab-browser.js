@@ -1,3 +1,5 @@
+import { flag } from "../constants/flags.js";
+import { JournalManager } from "../journal/journal-manager.js";
 import { Logger } from "../utils/logger.js";
 
 const {
@@ -70,7 +72,7 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         const _context = {
             ...await super._prepareContext(context)
         };
-        this.__prefabs = this.__getPrefabs() ?? [];
+        this.__prefabs = await this.__getPrefabs() ?? [];
         this.__allTags = this.#getAllTags() ?? [];
         return _context;
     }
@@ -134,8 +136,12 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         Logger.log("selectPrefab.__activePrefab:", this.__activePrefab);
     }
 
-    static #deletePrefab(event, target) {
-        // TODO: ...
+    static async #deletePrefab(event, target) {
+        Logger.log("#deletePrefab.__activePrefab:", this.__activePrefab);
+        if (!this.__activePrefab) return;
+        await JournalManager.deletePrefab(this.__activePrefab);
+        this.__activePrefab = null;
+        this.render({ force: true, parts: ["headerTags", "content"] });
     }
 
     static #onTagClick(event, target) {
@@ -196,6 +202,7 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
     #getAllTags() {
         const tagMap = new Map();
 
+        Logger.log("#getAllTags.__prefabs:", this.__prefabs);
         for (const prefab of this.__prefabs) {
             for (const tag of prefab.tags) {
                 if (!tagMap.has(tag.value)) {
@@ -207,8 +214,22 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         return [...tagMap.values()];
     }
 
-    __getPrefabs() {
-        return this.#mockPrefabs();
+    async __getPrefabs() {
+        const journal = await JournalManager.getOrCreatePrefabLibrary();
+        Logger.log("__getPrefabs.journal:", journal);
+        const prefabs = journal.getFlag(flag.scope, flag.prefabsName) ?? {};
+        Logger.log("__getPrefabs.prefabViews.prefabs:", prefabs);
+        const prefabViews = Object.values(prefabs).map(p => {
+            return {
+                id: p.id,
+                preview: p.tile?.document?.texture?.src ?? "",
+                name: p.name,
+                tags: []
+            }
+        });
+
+        Logger.log("__getPrefabs.prefabViews:", prefabViews);
+        return prefabViews;
     }
 
     __filterPrefabs(prefabs, textSearch, tags) {

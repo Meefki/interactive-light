@@ -1,15 +1,18 @@
-import { Logger } from "../utils/logger.js";
+import { logger, Logger } from "../utils/logger.js";
 
 import { flag } from "../constants/flags.js";
 import { locale } from "../constants/locale.js";
 import { settings } from "../constants/settings.js";
 import { LightTextureController } from "./light-texture-controller.js";
 import { fillTemplate } from "../utils/strings.js";
+import { JournalManager } from "../journal/journal-manager.js";
+import { createMultiSelect } from "../../templates/multiselect.js";
 
 export class AmbientLightConfig {
     static #checkboxInput = "chekbox-input";
     static #select = "select";
     static #textInput = "text-input";
+    static #filePathInput = "file-path";
     static #inputIdFormat = "${appId}.${flagPath}.${type}";
 
     //#region trackLightPositionHook
@@ -110,13 +113,25 @@ export class AmbientLightConfig {
         const activeTabName = app.tabGroups.sheet;
         const tabTitle = this.#createTabHtmlElement(activeTabName);
         if (nav) nav.appendChild(tabTitle);
-        
-        const tabContent = this.#createTabContentHtmlElement(activeTabName);
-        tabContent.appendChild(interactiveElement);
-        tabContent.appendChild(pathElement);
-        tabContent.appendChild(clickOptionsElement);
 
-        const footer =  html.querySelector(
+        const interactiveSettingsFieldset = this.#createInteractiveSettingsFieldsetHtmlElement();
+        interactiveSettingsFieldset.appendChild(interactiveElement);
+        interactiveSettingsFieldset.appendChild(pathElement);
+        interactiveSettingsFieldset.appendChild(clickOptionsElement);
+
+        const tagMultiselect = this.#createPreafbTagsHtmlElement();
+        
+        const prefabSettingsFieldset = this.#createPrefabSettingsFieldsetHtmlElement();
+        const prefabName = document.getFlag(flag.scope, flag.prefabName);
+        const prefabSettingsPrefabNameFormGroup = this.#createPrefabNameHtmlElement(app.id, prefabName);
+        prefabSettingsFieldset.appendChild(prefabSettingsPrefabNameFormGroup);
+        prefabSettingsFieldset.appendChild(tagMultiselect.element);
+
+        const tabContent = this.#createTabContentHtmlElement(activeTabName);
+        tabContent.appendChild(interactiveSettingsFieldset);
+        tabContent.appendChild(prefabSettingsFieldset);
+
+        const footer = html.querySelector(
             '[data-application-part="footer"]'
         );
         const navBodyArr = html.getElementsByClassName('window-content standard-form');
@@ -124,6 +139,14 @@ export class AmbientLightConfig {
             const navBody = navBodyArr[0];
             navBody.insertBefore(tabContent, footer);
         }
+        const makePrefabBtn = this.#createMakePrefabButton();
+        makePrefabBtn.hidden = !this.#checkInteractiveLightTabActive(html);
+        footer.insertBefore(makePrefabBtn, footer.firstChild);
+        nav.addEventListener("click", () => {
+            requestAnimationFrame(() => {
+                this.#updateMakePrefabButtonVisibility(html);
+            });
+        });
 
         html.onsubmit = this.#onConfigSubmit;
     };
@@ -183,12 +206,15 @@ export class AmbientLightConfig {
         label.innerText = game.i18n.localize(`${locale.path}.${locale.label}`);
 
         const formFields = document.createElement("div");
+        const filePickerId = fillTemplate(this.#inputIdFormat, {
+            appId: appId,
+            flagPath: flag.path,
+            type: this.#filePathInput
+        })
         formFields.className = "form-fields";
-        formFields.innerHTML = `<file-picker name="${
-            flag.path
-        }" type="image" id="${appId}-${flag.path}" value="${
-            path ?? ""
-        }"></file-picker>`;
+        formFields.innerHTML = `<file-picker name="${flag.path
+            }" type="image" id="${filePickerId}" value="${path ?? ""
+            }"></file-picker>`;
 
         const hint = document.createElement("p");
         hint.className = "hint";
@@ -202,7 +228,7 @@ export class AmbientLightConfig {
     };
 
     static #createInteractiveLightClickOptionsHtmlElement = (
-        appId, 
+        appId,
         option,
         checked
     ) => {
@@ -221,7 +247,7 @@ export class AmbientLightConfig {
 
         const formFields = document.createElement('div');
         formFields.className = "form-fields";
-        
+
         const select = document.createElement('select');
         select.name = flag.clickOptions;
         select.id = fillTemplate(this.#inputIdFormat, {
@@ -255,6 +281,66 @@ export class AmbientLightConfig {
         return formGroup;
     }
 
+    static #createInteractiveSettingsFieldsetHtmlElement = () => {
+        const legend = document.createElement('legend');
+        legend.textContent = game.i18n.localize(locale.interactiveSettingsLegend);
+        
+        const fieldset = document.createElement('fieldset');
+        fieldset.appendChild(legend);
+
+        return fieldset;
+    }
+
+    static #createPrefabNameHtmlElement = (
+        id,
+        value
+    ) => {
+        const formGroup = document.createElement('div');
+        formGroup.className = 'form-group';
+
+        const label = document.createElement('label');
+        label.innerText = game.i18n.localize(`${locale.prefabName}.${locale.label}`);
+
+        const formFields = document.createElement('div');
+        formFields.className = 'form-fields';
+
+        const input = document.createElement('input');
+        input.type = "text";
+        input.name = flag._prefabName;
+        input.value = value ?? "";
+        input.id = fillTemplate(this.#inputIdFormat, {
+            appId: id,
+            flagPath: flag._prefabName,
+            type: this.#textInput
+        });
+
+        const hint = document.createElement('p');
+        hint.className = 'hint';
+        hint.innerText = game.i18n.localize(`${locale.prefabName}.${locale.hint}`);
+
+        formFields.appendChild(input);
+        formGroup.appendChild(label);
+        formGroup.appendChild(formFields);
+        formGroup.appendChild(hint);
+
+        return formGroup;
+    }
+    
+    static #createPrefabSettingsFieldsetHtmlElement = () => {
+        const legend = document.createElement('legend');
+        legend.textContent = game.i18n.localize(locale.prefabSettingsLegend);
+        
+        const fieldset = document.createElement('fieldset');
+        fieldset.appendChild(legend);
+        
+        return fieldset;
+    }
+
+    static #createPreafbTagsHtmlElement = () => {
+        const multiselect = createMultiSelect({ initial: ["tag1", "tag2"], available: ["tag1", "tag2"] });
+        return multiselect;
+    }
+
     static #createTabHtmlElement = (active) => {
         const link = document.createElement('a');
         link.dataset.action = "tab";
@@ -281,9 +367,26 @@ export class AmbientLightConfig {
         if (active === "interactiveLight") section.classList.add('active');
         section.dataset.tab = "interactiveLight";
         section.dataset.group = "sheet";
-        section.dataset.applicationPart  = "interactiveLight";
+        section.dataset.applicationPart = "interactiveLight";
 
         return section;
+    }
+
+    static #createMakePrefabButton = () => {
+        const btn = document.createElement('button');
+        btn.type = "submit";
+        btn.innerHTML = `<i class="fa-solid fa-sticky-note" inert></i><span>${game.i18n.localize(locale.makePrefabButton)}</span>`;
+        btn.name = locale.makePrefabButton;
+        btn.dataset.action = "make-prefab";
+
+        return btn;
+    }
+
+    static #updateMakePrefabButtonVisibility(html) {
+        const activeTab = this.#checkInteractiveLightTabActive(html);
+        const makePrefabBtn = this.#getMakePrefabButton(html);
+        makePrefabBtn.hidden = !activeTab;
+        Logger.log("#updateMakePrefabButtonVisibility:", activeTab, makePrefabBtn);
     }
 
     static #onInteractiveCheckboxChanged = (ev) => {
@@ -310,10 +413,10 @@ export class AmbientLightConfig {
         );
         const clickOptionsFormGroup = document.getElementById(
             fillTemplate(this.#inputIdFormat, {
-                    appId: appId,
-                    flagPath: flag.clickOptions,
-                    type: "form-group"
-                }
+                appId: appId,
+                flagPath: flag.clickOptions,
+                type: "form-group"
+            }
             )
         )
 
@@ -322,7 +425,7 @@ export class AmbientLightConfig {
     };
 
     static #onConfigSubmit = async (ev) => {
-        Logger.log("AMBIENT LIGHT CONFIGURATION SUBMITTED");
+        Logger.log("AMBIENT LIGHT CONFIGURATION SUBMITTED:", ev);
 
         const interactiveChk = this.#getInteractiveCheckbox(
             ev.target
@@ -349,37 +452,53 @@ export class AmbientLightConfig {
                 lightId,
                 path
             );
-            if (changed) return;
-
-            Logger.log("CREATING TOKEN");
-            LightTextureController.createTile(
-                path,
-                ambientLight.position._x,
-                ambientLight.position._y,
-                ambientLight.document
-            ).then((tileDoc) => {
-                Logger.log("DATA", tileDoc);
-            });
+            if (!changed) {
+                Logger.log("CREATING TILE");
+                LightTextureController.createTile(
+                    path,
+                    ambientLight.position._x,
+                    ambientLight.position._y,
+                    ambientLight.document
+                ).then((tileDoc) => {
+                    Logger.log("DATA", tileDoc);
+                });
+            }
         } else {
             LightTextureController.delete(tileId, ambientLight.document);
         }
+
+        Logger.log("#onConfigSubmit.ev.submitter.name:", ev.submitter.name);
+        if (ev.submitter.name === locale.makePrefabButton) {
+            Logger.log("#onConfigSubmit: making prefab...");
+            await this.#makePrefab(ambientLight.document);
+        }
     };
 
-    static #getInteractiveCheckbox = (
-        form
-    ) => {
-        return form.querySelector(
-            `[name="${flag.interactive}"]`
-        );
+    static #makePrefab = async (lightDocument) => {
+        const prefab = JournalManager.buildLightPrefabV1(lightDocument);
+        await JournalManager.savePrefab(prefab);
+    }
+
+    static #getInteractiveCheckbox = (form) => {
+        return form.querySelector(`[name="${flag.interactive}"]`);
     };
 
     static #getPathInput = (form) => {
         return form.querySelector(`[name="${flag.path}"]`);
     };
 
-    static #getAppIdFromInteractiveCheckbox = (
-        interactiveChk
-    ) => {
+    static #getMakePrefabButton = (html) => {
+        return html.querySelector(`button[name="${locale.makePrefabButton}"]`);
+    }
+
+    static #checkInteractiveLightTabActive = (html) => {
+        const interactiveTab = html.querySelector(`.tabs a.active[data-tab="interactiveLight"]`);
+        Logger.log("#checkInteractiveLightTabActive.html:", html);
+        Logger.log("#checkInteractiveLightTabActive.interactiveTab:", interactiveTab);
+        return interactiveTab != null;
+    }
+
+    static #getAppIdFromInteractiveCheckbox = (interactiveChk) => {
         return interactiveChk.id.slice(
             0,
             interactiveChk.id.indexOf(
