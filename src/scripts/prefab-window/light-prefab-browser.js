@@ -1,3 +1,6 @@
+import { flag } from "../constants/flags.js";
+import { JournalManager } from "../journal/journal-manager.js";
+import { PrefabPlacement } from "../placing/prefab-placement.js";
 import { Logger } from "../utils/logger.js";
 
 const {
@@ -48,17 +51,20 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
     __allTags = [];
     __activeTags = [];
 
+    async close(options = {}) {
+        PrefabPlacement.stop();
+        return super.close(options);
+    }
+
     _onRender(context, options) {
         super._onRender(context, options);
 
         const scroller = this.element?.querySelector(".prefab-container");
-        Logger.log("_onRender.scroller:", scroller, "app.__scrollTop:", this.__scrollTop);
         if (scroller && this.__scrollTop) {
             scroller.scrollTop = this.__scrollTop;
         }
 
         const searchInput = this.element?.querySelector('input[data-action="search"]');
-        Logger.log('_onRender.searchInput', searchInput);
         if (searchInput) {
             searchInput.addEventListener("input", (event) => {
                 this.#search(event);
@@ -70,8 +76,8 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         const _context = {
             ...await super._prepareContext(context)
         };
-        this.__prefabs = this.__getPrefabs() ?? [];
-        this.__allTags = this.#getAllTags() ?? [];
+        this.__prefabs = await this.__getPrefabs() ?? [];
+        this.__allTags = await this.#getAllTags() ?? [];
         return _context;
     }
 
@@ -91,9 +97,8 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
     }
 
     async _prepareHeaderTagsContext(context, options) {
-        context.allTags = this.__allTags = this.#getAllTags() ?? [];
+        context.allTags = this.__allTags = await this.#getAllTags() ?? [];
         context.activeTags = this.__activeTags;
-        Logger.log("_prepareHeaderTagsContext:");
         return context;
     }
 
@@ -103,12 +108,10 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         context.selectedPrefabId = this.__activePrefab ?? "";
 
         if (!this.__filteredPrefabs.map(fp => fp.id).includes(this.__activePrefab)) this.__activePrefab = "";
-        Logger.log("_prepareContentContext:", (this.__filteredPrefabs ?? []).map(fp => fp.id), this.__activePrefab, options);
         return context;
     }
 
     static #onPrefabClick(event, target) {
-        Logger.log("onPrefabClick:", event, target);
         if (event.altKey) {
             event.preventDefault();
             this.__openSettings(target);
@@ -117,51 +120,48 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
     }
 
     static __openSettings(target) {
-        Logger.log("openSettings:", target);
         // TODO: ...
         throw "Method Not Implemented";
     }
 
     __selectPrefab(target) {
-        Logger.log("selectPrefab:", target);
         if (this.__activePrefab === target.dataset.id) {
             this.__activePrefab = null;
             target.checked = false;
+            PrefabPlacement.stop();
         } else {
             this.__activePrefab = target.dataset.id;
+            PrefabPlacement.start(this.__activePrefab);
         }
-
-        Logger.log("selectPrefab.__activePrefab:", this.__activePrefab);
     }
 
-    static #deletePrefab(event, target) {
-        // TODO: ...
+    static async #deletePrefab(event, target) {
+        if (!this.__activePrefab) return;
+        await JournalManager.deletePrefab(this.__activePrefab);
+        this.__activePrefab = null;
+        PrefabPlacement.stop();
+        this.render({ force: true, parts: ["headerTags", "content"] });
     }
 
     static #onTagClick(event, target) {
-        Logger.log("onTagClick:", event, target);
         if (!this.__activeTags) this.__activeTags = [];
 
         const app = this;
 
         const scroller = app.element?.querySelector(".prefab-container");
-        Logger.log("#onTagClick.app:", app, "scroller:", scroller);
         if (scroller) {
-            Logger.log("#onTagClick.scroller.scrollTop:", scroller.scrollTop);
             app.__scrollTop = scroller.scrollTop;
         }
 
         if (this.__activeTags.filter(at => at.value === target.dataset.id).length) {
             // exists
             this.__activeTags = this.__activeTags.filter(at => at.value !== target.dataset.id)
-            Logger.log("selectTag: tag exists, removed", this.__activeTags);
         }
         else {
             // new
             try {
                 const tag = this.__allTags.filter(at => at.value === target.dataset.id)[0];
                 this.__activeTags.push(tag);
-                Logger.log("selectTag: new tag, added", this.__activeTags);
             } catch (e) {
                 Logger.error("#onTagClick:", "Unable to retrieve and add tag to the filter");
             }
@@ -171,9 +171,7 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
     }
 
     #search(event) {
-        Logger.log("#search.event:", event);
         const value = event?.target?.value ?? "";
-        Logger.log("#search.event.target.value:", value, this.__search);
         if (this.__search === value) return;
 
         this.__search = value
@@ -181,7 +179,6 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
     }
 
     static #clearFilters(event, target) {
-        Logger.log("#clearFilters:", event, target);
         this.__search = "";
         this.__activeTags = [];
 
@@ -193,26 +190,32 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         throw "Method Not Implemented";
     }
 
-    #getAllTags() {
-        const tagMap = new Map();
-
-        for (const prefab of this.__prefabs) {
-            for (const tag of prefab.tags) {
-                if (!tagMap.has(tag.value)) {
-                    tagMap.set(tag.value, tag);
-                }
-            }
-        }
-
-        return [...tagMap.values()];
+    async #getAllTags() {
+        const tags = await JournalManager.getAllTags();
+        return tags.sort(function (a, b) {
+            return ('' + a.value).localeCompare(b.value);
+        });
     }
 
-    __getPrefabs() {
-        return this.#mockPrefabs();
+    async __getPrefabs() {
+        const prefabs = Object.values(await JournalManager.getPrefabs());
+        const prefabViews = await Promise.all(prefabs.map(async (p) => {
+            const tags = await JournalManager.getPrefabTags(null, false, p.light.document);
+            const prefabView = {
+                id: p.id,
+                preview: p.tile?.document?.texture?.src ?? "",
+                name: p.name,
+                tags: tags
+            }
+            return prefabView;
+        }));
+
+        return prefabViews.sort(function (a, b) {
+            return ('' + a.name).localeCompare(b.name);
+        });
     }
 
     __filterPrefabs(prefabs, textSearch, tags) {
-        Logger.log("__filterPrefabs:", prefabs, textSearch, tags);
         this.__filteredPrefabs = [...prefabs];
         if (textSearch && textSearch.length) {
             const q = textSearch.trim().toLowerCase();
@@ -221,107 +224,14 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
                     const words = q.split(/\s+/);
                     return words.every(word => p.name.toLowerCase().includes(word));
                 });
-                Logger.log("__filterPrefabs.this.__filteredPrefabs (text):", this.__filteredPrefabs);
             }
         }
 
         if (tags && tags.length) {
             const tagsValueSet = new Set(tags.map(t => t.value));
-            Logger.log("__filterPrefabs.tagsValueSet (tags):", tagsValueSet);
             this.__filteredPrefabs = this.__filteredPrefabs.filter(p => p.tags.some(t => tagsValueSet.has(t.value)));
-            Logger.log("__filterPrefabs.this.__filteredPrefabs (tags):", this.__filteredPrefabs);
         }
 
         return this.__filteredPrefabs;
-    }
-
-    #mockPrefabs() {
-        return [
-            {
-                id: 'light-1',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Campfires_and_Firepits/Campfire_Embers_C1_1x1.webp',
-                name: 'Campfire Embers C1',
-                tags: [
-                    { value: 'white', color: 'White' },
-                    { value: 'green', color: 'Green' },
-                    { value: 'black', color: 'Black' },
-                    { value: 'red', color: 'Red' },
-                    { value: 'cyan', color: 'Cyan' },
-                    { value: 'dark golden rod', color: 'DarkGoldenRod' },
-                    { value: 'lemon', color: 'LemonChiffon' },
-                    { value: 'blue', color: 'LightSkyBlue' },
-                    { value: 'gray', color: 'LightSlateGrey' }
-                ]
-            },
-            {
-                id: 'light-2',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Campfires_and_Firepits/Campfire_Ash_C1_2x2.webp',
-                name: 'Campfire Ash C1',
-                tags: [{ value: 'white', color: 'White' },
-                { value: 'green', color: 'Green' },
-                { value: 'black', color: 'Black' }]
-            },
-            {
-                id: 'light-3',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Campfires_and_Firepits/Campfire_Stone_Redrock_A1_1x1.webp',
-                name: 'Campfire Stone Redrock A1',
-                tags: [{ value: 'cyan', color: 'Cyan' },
-                { value: 'dark golden rod', color: 'DarkGoldenRod' },
-                { value: 'lemon', color: 'LemonChiffon' }]
-            },
-            {
-                id: 'light-4',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Campfires_and_Firepits/Campfire_Stone_Redrock_A1_Lit_1x1.webp',
-                name: 'Campfire Stone Redrock A1 Lit',
-                tags: [{ value: 'dark golden rod', color: 'DarkGoldenRod' },
-                { value: 'lemon', color: 'LemonChiffon' },
-                { value: 'blue', color: 'LightSkyBlue' },
-                { value: 'gray', color: 'LightSlateGrey' }]
-            },
-            {
-                id: 'light-5',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Campfires_and_Firepits/Campfire_Wood_Ashen_Lit_A1_1x1.webp',
-                name: 'Campfire Wood Ashen Lit A1',
-                tags: [{ value: 'gray', color: 'LightSlateGrey' },
-                { value: 'gold', color: 'PaleGoldenRod' }]
-            },
-            {
-                id: 'light-6',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Lamps/Lamp_Street_Double_Metal_Brass_C_1x1.webp',
-                name: 'Lamp Street Double Metal Brass C',
-                tags: [{ value: 'red', color: 'Red' },
-                { value: 'cyan', color: 'Cyan' },
-                { value: 'dark golden rod', color: 'DarkGoldenRod' }]
-            },
-            {
-                id: 'light-7',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Lamps/Lamp_Street_Double_Metal_Brass_J_1x1.webp',
-                name: 'Lamp Street Double Metal Brass J',
-                tags: [{ value: 'lemon', color: 'LemonChiffon' },
-                { value: 'blue', color: 'LightSkyBlue' },
-                { value: 'gray', color: 'LightSlateGrey' }]
-            },
-            {
-                id: 'light-8',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Lamps/Mage_Light_Red_1x1.webp',
-                name: 'Mag Light Red',
-                tags: [{ value: 'blue', color: 'LightSkyBlue' }]
-            },
-            {
-                id: 'light-9',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Lamps/Mage_Light_Blue_1x1.webp',
-                name: 'Mage Light Blue 1x1',
-                tags: [{ value: 'blue', color: 'LightSkyBlue' },
-                { value: 'gray', color: 'LightSlateGrey' }]
-            },
-            {
-                id: 'light-10',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Torches_and_Sconces/Sconce_B_1x1.webp',
-                name: 'Sconce B 1x1',
-                tags: [{ value: 'red', color: 'Red' },
-                { value: 'cyan', color: 'Cyan' },
-                { value: 'dark golden rod', color: 'DarkGoldenRod' }]
-            }
-        ]
     }
 }

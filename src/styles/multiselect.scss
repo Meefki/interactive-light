@@ -1,0 +1,26 @@
+.tag-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-bottom: 0.3rem;
+
+    .tag-chip {
+        border-style: solid;
+        border-width: 1px;
+        border-radius: 4px;
+        padding: 2px 5px;
+        border-color: var(--tag-color);
+
+        cursor: pointer;
+    }
+}
+
+.tag-dropdown {
+    max-height: 100px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    
+    background: var(--input-background-color);
+    border: 1px solid var(--input-border-color);
+}

@@ -9,11 +9,22 @@ export const config = 'Config';
 export const browser = 'Browser';
 
 export const menu = 'Menu';
+export const prefab = 'Prefab';
 export const prefabs = 'Prefabs';
+
+export const multiselect = 'Multiselect';
+export const multiselectAddName = 'Add';
+export const multiselectAdd = `${key}.${multiselect}.${multiselectAddName}`;
+
+export const interactiveSettingsLegend = `${key}.${config}.InteractiveSettingsLegend`;
+export const prefabSettingsLegend = `${key}.${config}.PrefabSettingsLegend`;
 
 export const enabled = `${key}.${config}.Enabled`;
 export const path = `${key}.${config}.Path`;
 export const clickOptions = `${key}.${config}.ClickOptions`;
+export const prefabName = `${key}.${config}.${prefab}.Name`;
+export const prefabTags = `${key}.${config}.${prefab}.Tags`;
+export const makePrefabButton = `${key}.${config}.MakePrefabButton`;
 
 export const tablName = `${key}.${config}.TabName`;
 

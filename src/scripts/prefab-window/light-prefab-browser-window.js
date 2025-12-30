@@ -10,6 +10,5 @@ export function openLightPrefabBrowser() {
   }
 
   const lightPrefabBrowserApp = new LightPrefabBrowserV2();
-  Logger.log("PARTS: ", lightPrefabBrowserApp.constructor.PARTS);
   lightPrefabBrowserApp.render(true);
 }
