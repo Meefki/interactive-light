@@ -114,13 +114,15 @@ export class JournalManager {
             tags = document.flags?.[flag.scope]?.[flag.prefabTagsName]
         }
 
-        tags = Array.isArray(tags) ? tags : [tags];
-        tags = tags.map(tv => {
-            return {
-                value: tv,
-                color: generateTagColor(tv)
-            }
-        }) ?? [];
+        if (tags) {
+            tags = Array.isArray(tags) ? tags : [tags];
+            tags = tags.map(tv => {
+                return {
+                    value: tv,
+                    color: generateTagColor(tv)
+                }
+            }) ?? [];
+        }
 
         return tags ?? [];
     }

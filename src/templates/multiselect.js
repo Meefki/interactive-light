@@ -1,5 +1,6 @@
-import { flag } from "../scripts/constants/flags";
-import { Logger } from "../scripts/utils/logger";
+import { flag } from "../scripts/constants/flags.js";
+import { locale } from "../scripts/constants/locale.js";
+import { Logger } from "../scripts/utils/logger.js";
 import { generateTagColor } from "../scripts/utils/tag-color.js"
 
 export function createMultiSelect({
@@ -15,7 +16,7 @@ export function createMultiSelect({
     const input = document.createElement("input");
     input.type = "text";
     input.setAttribute("list", "tags");
-    input.placeholder = "Add tag…";
+    input.placeholder = game.i18n.localize(locale.multiselectAdd); //"Add tag…";
 
     const dropdown = document.createElement("datalist");
     dropdown.id = "tags";
@@ -53,24 +54,23 @@ export function createMultiSelect({
         const query = input.value.trim().toLowerCase();
         dropdown.innerHTML = "";
 
-        if (!query) return;
-
+        Logger.log(availableTags, selected, query);
         const matches = availableTags.filter(tag =>
             tag.value.toLowerCase().includes(query) &&
-            !selected.filter(s => s.value.toLowerCase() === tag.value.toLowerCase())
+            !selected.filter(s => s.value.toLowerCase() === tag.value.toLowerCase()).length
         );
 
         for (const tag of matches) {
-            const li = document.createElement("option");
-            li.textContent = tag;
+            const option = document.createElement("option");
+            option.textContent = tag.value;
 
-            li.addEventListener("click", () => {
+            option.addEventListener("click", () => {
                 selected.push(tag);
                 input.value = "";
                 render();
             });
 
-            dropdown.appendChild(li);
+            dropdown.appendChild(option);
         }
     }
 
@@ -87,7 +87,7 @@ export function createMultiSelect({
         if (event.key === "Enter") {
             event.preventDefault();
             const value = input.value.trim();
-            if (!value || selected.includes(value)) return;
+            if (!value || selected.map(s => s.value).includes(value)) return;
 
             const color = generateTagColor(value);
             const tag = { 

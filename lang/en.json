@@ -47,7 +47,7 @@
             }
         },
         "Multiselect": {
-            "Add": "Add..."
+            "Add": "Press Enter to add a new tag"
         }
     }
 }
