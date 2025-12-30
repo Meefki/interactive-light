@@ -1,5 +1,6 @@
 import { flag } from "../constants/flags.js";
 import { JournalManager } from "../journal/journal-manager.js";
+import { PrefabPlacement } from "../placing/prefab-placement.js";
 import { Logger } from "../utils/logger.js";
 
 const {
@@ -49,6 +50,11 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
 
     __allTags = [];
     __activeTags = [];
+
+    async close(options = {}) {
+        PrefabPlacement.stop();
+        return super.close(options);
+    }
 
     _onRender(context, options) {
         super._onRender(context, options);
@@ -122,8 +128,10 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         if (this.__activePrefab === target.dataset.id) {
             this.__activePrefab = null;
             target.checked = false;
+            PrefabPlacement.stop();
         } else {
             this.__activePrefab = target.dataset.id;
+            PrefabPlacement.start(this.__activePrefab);
         }
     }
 
@@ -131,6 +139,7 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         if (!this.__activePrefab) return;
         await JournalManager.deletePrefab(this.__activePrefab);
         this.__activePrefab = null;
+        PrefabPlacement.stop();
         this.render({ force: true, parts: ["headerTags", "content"] });
     }
 
@@ -183,7 +192,9 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
 
     async #getAllTags() {
         const tags = await JournalManager.getAllTags();
-        return tags;
+        return tags.sort(function (a, b) {
+            return ('' + a.value).localeCompare(b.value);
+        });
     }
 
     async __getPrefabs() {
@@ -199,7 +210,9 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
             return prefabView;
         }));
 
-        return prefabViews;
+        return prefabViews.sort(function (a, b) {
+            return ('' + a.name).localeCompare(b.name);
+        });
     }
 
     __filterPrefabs(prefabs, textSearch, tags) {
@@ -220,95 +233,5 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         }
 
         return this.__filteredPrefabs;
-    }
-
-    #mockPrefabs() {
-        return [
-            {
-                id: 'light-1',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Campfires_and_Firepits/Campfire_Embers_C1_1x1.webp',
-                name: 'Campfire Embers C1',
-                tags: [
-                    { value: 'white', color: 'White' },
-                    { value: 'green', color: 'Green' },
-                    { value: 'black', color: 'Black' },
-                    { value: 'red', color: 'Red' },
-                    { value: 'cyan', color: 'Cyan' },
-                    { value: 'dark golden rod', color: 'DarkGoldenRod' },
-                    { value: 'lemon', color: 'LemonChiffon' },
-                    { value: 'blue', color: 'LightSkyBlue' },
-                    { value: 'gray', color: 'LightSlateGrey' }
-                ]
-            },
-            {
-                id: 'light-2',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Campfires_and_Firepits/Campfire_Ash_C1_2x2.webp',
-                name: 'Campfire Ash C1',
-                tags: [{ value: 'white', color: 'White' },
-                { value: 'green', color: 'Green' },
-                { value: 'black', color: 'Black' }]
-            },
-            {
-                id: 'light-3',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Campfires_and_Firepits/Campfire_Stone_Redrock_A1_1x1.webp',
-                name: 'Campfire Stone Redrock A1',
-                tags: [{ value: 'cyan', color: 'Cyan' },
-                { value: 'dark golden rod', color: 'DarkGoldenRod' },
-                { value: 'lemon', color: 'LemonChiffon' }]
-            },
-            {
-                id: 'light-4',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Campfires_and_Firepits/Campfire_Stone_Redrock_A1_Lit_1x1.webp',
-                name: 'Campfire Stone Redrock A1 Lit',
-                tags: [{ value: 'dark golden rod', color: 'DarkGoldenRod' },
-                { value: 'lemon', color: 'LemonChiffon' },
-                { value: 'blue', color: 'LightSkyBlue' },
-                { value: 'gray', color: 'LightSlateGrey' }]
-            },
-            {
-                id: 'light-5',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Campfires_and_Firepits/Campfire_Wood_Ashen_Lit_A1_1x1.webp',
-                name: 'Campfire Wood Ashen Lit A1',
-                tags: [{ value: 'gray', color: 'LightSlateGrey' },
-                { value: 'gold', color: 'PaleGoldenRod' }]
-            },
-            {
-                id: 'light-6',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Lamps/Lamp_Street_Double_Metal_Brass_C_1x1.webp',
-                name: 'Lamp Street Double Metal Brass C',
-                tags: [{ value: 'red', color: 'Red' },
-                { value: 'cyan', color: 'Cyan' },
-                { value: 'dark golden rod', color: 'DarkGoldenRod' }]
-            },
-            {
-                id: 'light-7',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Lamps/Lamp_Street_Double_Metal_Brass_J_1x1.webp',
-                name: 'Lamp Street Double Metal Brass J',
-                tags: [{ value: 'lemon', color: 'LemonChiffon' },
-                { value: 'blue', color: 'LightSkyBlue' },
-                { value: 'gray', color: 'LightSlateGrey' }]
-            },
-            {
-                id: 'light-8',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Lamps/Mage_Light_Red_1x1.webp',
-                name: 'Mag Light Red',
-                tags: [{ value: 'blue', color: 'LightSkyBlue' }]
-            },
-            {
-                id: 'light-9',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Lamps/Mage_Light_Blue_1x1.webp',
-                name: 'Mage Light Blue 1x1',
-                tags: [{ value: 'blue', color: 'LightSkyBlue' },
-                { value: 'gray', color: 'LightSlateGrey' }]
-            },
-            {
-                id: 'light-10',
-                preview: 'assets/ForgottenAdventures/!Core_Settlements/Lightsources/Torches_and_Sconces/Sconce_B_1x1.webp',
-                name: 'Sconce B 1x1',
-                tags: [{ value: 'red', color: 'Red' },
-                { value: 'cyan', color: 'Cyan' },
-                { value: 'dark golden rod', color: 'DarkGoldenRod' }]
-            }
-        ]
     }
 }

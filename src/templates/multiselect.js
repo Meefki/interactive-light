@@ -54,7 +54,6 @@ export function createMultiSelect({
         const query = input.value.trim().toLowerCase();
         dropdown.innerHTML = "";
 
-        Logger.log(availableTags, selected, query);
         const matches = availableTags.filter(tag =>
             tag.value.toLowerCase().includes(query) &&
             !selected.filter(s => s.value.toLowerCase() === tag.value.toLowerCase()).length

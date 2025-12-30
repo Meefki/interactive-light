@@ -114,6 +114,44 @@
             display: flex;
             flex-direction: row;
             gap: 0.7rem;
+
+            .footer-hint {
+                margin-left: auto;
+                position: relative;
+                color: var(--color-text-primary);
+                cursor: help;
+                display: flex;
+                align-items: center;
+
+                .hint-tooltip {
+                    position: absolute;
+                    bottom: 125%;
+                    right: 0;
+
+                    background: var(--background);
+                    color: var(--color-text-primary);
+                    padding: 0.4rem 0.6rem;
+                    border: 2px solid var(--color-fieldset-border);
+                    border-radius: 4px;
+
+                    font-size: 0.75rem;
+                    white-space: nowrap;
+
+                    opacity: 0;
+                    pointer-events: none;
+                    transform: translateY(4px);
+                    transition: opacity 0.15s ease, transform 0.15s ease;
+
+                    z-index: 100;
+                }
+            }
+
+            .footer-hint:hover {
+                .hint-tooltip {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
         }
     }
 }

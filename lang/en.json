@@ -42,7 +42,13 @@
                 "Name": "Prefabs of Interactive Light",
 
                 "Browser": {
-                    "Title": "Light Sources Prefabs"
+                    "Title": "Light Sources Prefabs",
+                    "Footer": {
+                        "Hint": {
+                            "Rotate": "Shiftt/Alt + Wheel — rotate prefab preview",
+                            "Place": "Click — place prefab"
+                        }
+                    }
                 }
             }
         },

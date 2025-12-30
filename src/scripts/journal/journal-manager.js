@@ -35,6 +35,7 @@ export class JournalManager {
         delete lightData._id;
         delete lightData.x;
         delete lightData.y;
+        delete lightData.flags?.[flag.scope]?.[flag.tileIdName];
 
         const prefabObj = {
             schema: 1,
@@ -58,6 +59,7 @@ export class JournalManager {
             delete tileData._id;
             delete tileData.x;
             delete tileData.y;
+            delete tileData.flags?.[flag.scope]?.[flag.lightIdName];
 
             prefabObj.tile = {};
             prefabObj.tile.document = tileData;
@@ -103,7 +105,7 @@ export class JournalManager {
 
     // mode: false - light id or doc, true - prefab id
     // TODO: by light id
-    static async getPrefabTags(id, mode, document) {
+    static async getPrefabTags(id, mode, document = null) {
         let tags = [];
         if (mode) {
             const prefab = await this.getPrefab(id);
