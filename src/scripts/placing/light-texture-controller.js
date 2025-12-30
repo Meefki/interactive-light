@@ -1,6 +1,6 @@
-import { flag } from "./constants/flags.js";
-import { settings } from "./constants/settings.js";
-import { Logger } from "./utils/logger.js";
+import { flag } from "../constants/flags.js";
+import { settings } from "../constants/settings.js";
+import { Logger } from "../utils/logger.js";
 
 export class LightTextureController {
     static updateTextureSource = async (
@@ -12,7 +12,6 @@ export class LightTextureController {
         if (!tileId) return false;
 
         const tile = game.canvas?.tiles?.get(tileId);
-        Logger.log(tile);
 
         if (!tile) {
             Logger.warn(`tile with ID ${tileId} not found`);
@@ -20,7 +19,7 @@ export class LightTextureController {
         }
 
         try {
-            Logger.log(`UPDATING tile ${tileId} TEXTURE SOURCE`);
+            Logger.info(`UPDATING tile ${tileId} TEXTURE SOURCE`);
 
             await tile.document.update({
                 texture: { src: path },
@@ -48,7 +47,7 @@ export class LightTextureController {
             const sceneTile = game.scenes.current?.tiles.get(tileId);
             const canvasTile = game.canvas?.tiles?.get(tileId);
             if (sceneTile) {
-                Logger.log(`DELETING tile: ${tileId}`);
+                Logger.info(`DELETING tile: ${tileId}`);
 
                 if (canvasTile) game.canvas?.tiles?.removeChild(canvasTile);
                 await sceneTile.delete();
@@ -61,7 +60,7 @@ export class LightTextureController {
         }
     };
 
-    static __createTile = async (tileDoc) => 
+    static #createTile = async (tileDoc) => 
         await new foundry.canvas.placeables.Tile(tileDoc);
 
     static createTile = async (
@@ -71,7 +70,6 @@ export class LightTextureController {
     ) => {
         if (!ambientLightDoc?.id) return;
 
-        Logger.log("light pos", `${x} : ${y}`);
         const tileDoc = await TileDocument.create(
             {
                 name: `light-${ambientLightDoc.id}`,
@@ -85,10 +83,9 @@ export class LightTextureController {
             },
             { parent: canvas.scene }
         );
-        Logger.log("tile doc created", tileDoc);
         if (!tileDoc) return;
 
-        const tile = await this.__createTile(tileDoc);
+        const tile = await this.#createTile(tileDoc);
         if (!tile) return;
 
         await tileDoc.setFlag(
@@ -114,7 +111,7 @@ export class LightTextureController {
 
         const tile = game.canvas?.tiles?.get(tileId);
         if (!tile) {
-            Logger.log(`Couldn't find a tile with id ${tileId}`);
+            Logger.warn(`Couldn't find a tile with id ${tileId}`);
             return false;
         }
 
@@ -123,13 +120,13 @@ export class LightTextureController {
         if (posX === 0 || posX) {
             const x = this.calcObjPosition(posX, "X");
             updates.x = x;
-            Logger.log(`POS X UPDATED: ${x}`);
+            Logger.info(`POS X UPDATED: ${x}`);
         }
 
         if (posY === 0 || posY) {
             const y = this.calcObjPosition(posY, "Y")
             updates.y = y;
-            Logger.log(`POS Y UPDATED: ${y}`);
+            Logger.info(`POS Y UPDATED: ${y}`);
         }
 
         if (Object.keys(updates).length > 0) {
@@ -137,7 +134,6 @@ export class LightTextureController {
                 await tile.document.update(updates);
             } catch (error) {
                 Logger.error(`Unnable to update tile [${tileId}]`);
-                console.log(error);
             }
         }
 
@@ -148,10 +144,10 @@ export class LightTextureController {
         light,
         axis
     ) => {
-        return light - this.__getTileSize(axis) / 2;
+        return light - this.#getTileSize(axis) / 2;
     };
 
-    static __getTileSize = (axis) => {
+    static #getTileSize = (axis) => {
         switch (axis) {
             case "X":
                 return settings.tileWidth;

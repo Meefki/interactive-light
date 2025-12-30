@@ -1,11 +1,9 @@
-import { flag } from "./constants/flags.js";
+import { flag } from "../constants/flags.js";
 import { PermissionManager } from "./permission-manager.js";
-import { Logger } from "./utils/logger.js";
+import { Logger } from "../utils/logger.js";
 
 export class TileInteractionManager {
     static HOOK_NAME = "leftClickTile";
-
-    static init = () => { }
 
     static AddClickHandlers() {
         this.AddSingleClickWrapper();
@@ -18,7 +16,6 @@ export class TileInteractionManager {
             'interactive-light',
             'foundry.canvas.layers.TokenLayer.prototype._onClickLeft',
             function (wrapped, event) {
-                Logger.log("Logging event (single click):", event)
                 const handled = TileInteractionManager.handler(event, 1);
 
                 if (handled) return true;
@@ -36,7 +33,6 @@ export class TileInteractionManager {
             'interactive-light',
             'foundry.canvas.layers.TokenLayer.prototype._onClickLeft2',
             function (wrapped, event) {
-                Logger.log("Logging event (double click):", event)
                 const handled = TileInteractionManager.handler(event, 0);
 
                 if (handled) return true;
@@ -50,31 +46,31 @@ export class TileInteractionManager {
 
     static async handleTileClick(t) {
         if (!t) {
-            Logger.log("TileInteractionManager.handleTileClick: Empty Tile");
+            Logger.warn("TileInteractionManager.handleTileClick: Empty Tile");
             return;
         }
 
-        const lightInfo = TileInteractionManager.__getLightConfig(t);
+        const lightInfo = TileInteractionManager.#getLightConfig(t);
         if (!lightInfo || !lightInfo.lightId) return;
 
         await PermissionManager.toggleLightHidden(lightInfo.lightId);
 
-        Logger.log(`Tile clicked by ${game.user?.name}`, {
+        Logger.info(`Tile clicked by ${game.user?.name}`, {
             tile: t.id,
             light: lightInfo.lightId,
             user: game.userId,
         });
     }
 
-    static __getLightConfig(t) {
+    static #getLightConfig(t) {
         if (!t) {
-            Logger.log("TileInteractionManager.__getLightConfig: Empty Tile");
+            Logger.warn("TileInteractionManager.#getLightConfig: Empty Tile");
             return;
         }
 
         const lightId = t.document.getFlag(flag.scope, flag.lightIdName);
         if (!lightId) {
-            Logger.log("TileInteractionManager.__getLightConfig: Empty light ID");
+            Logger.warn("TileInteractionManager.#getLightConfig: Empty light ID");
             return;
         }
         const lights = game.canvas.lighting.objects.children;
@@ -84,23 +80,18 @@ export class TileInteractionManager {
                 const mode = filteredLights[0].document.getFlag(flag.scope, flag.clickOptionsName);
                 return { lightId, mode };
             }
-            Logger.log("TileInteractionManager.__getLightConfig: Light not found");
+            Logger.warn("TileInteractionManager.#getLightConfig: Light not found");
         }
-        Logger.log("TileInteractionManager.__getLightConfig: No lights on the layer");
+        Logger.warn("TileInteractionManager.#getLightConfig: No lights on the layer");
     }
 
     //#region Canvas Work
 
     static handler = async (event, type) => {
         try {
-            Logger.log('hit canvas handler');
             if (canvas.activeLayer !== canvas.tokens) return;
             const stagePos = event.data.getLocalPosition(canvas.stage);
             const globalPos = event.data.global;
-
-            Logger.log("hit canvas handler");
-            Logger.log("hit by q", stagePos);
-            Logger.log("event.data.global", globalPos);
 
             const searchRect = new PIXI.Rectangle(stagePos.x, stagePos.y, 1, 1);
             let candidates = [];
@@ -110,8 +101,6 @@ export class TileInteractionManager {
                 Logger.warn("Quadtree.getObjects failed, falling back to all placeables", e);
                 candidates = Array.from(canvas.tiles.placeables);
             }
-
-            Logger.log('candidates:', candidates);
 
             if (!candidates.size) return false;
 
@@ -130,26 +119,22 @@ export class TileInteractionManager {
             });
 
             for (let tile of candidates) {
-                Logger.log("Checking tile:", tile);
                 if (!tile?.visible) continue;
 
                 const lightId = tile.document.getFlag(flag.scope, flag.lightIdName)
                     ?? tile.document?.flags?.[flag.scope]?.lightId
                     ?? null;
-                Logger.log("found light id:", lightId);
                 if (!lightId) continue;
 
                 let hit = false;
                 const mesh = tile.mesh ?? tile._mesh ?? null;
 
-                Logger.log(mesh);
                 if (mesh && typeof mesh.containsPoint === "function") {
                     hit = TileInteractionManager.meshContains(mesh, globalPos);
                 } else {
                     hit = TileInteractionManager.rectContainsRotated(tile, x, y);
                 }
 
-                Logger.log("hit?", hit);
                 if (!hit) continue;
 
                 const light = canvas.lighting.placeables.find(l => l.document?.id === lightId || l.id === lightId);
@@ -161,7 +146,6 @@ export class TileInteractionManager {
 
                 try {
                     const clickOption = light.document.getFlag(flag.scope, flag.clickOptionsName);
-                    Logger.log("Click option", clickOption, type, clickOption === type);
                     if (clickOption === type)
                         PermissionManager.toggleLightHidden(lightId);
                     else continue;
