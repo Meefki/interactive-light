@@ -1,5 +1,6 @@
 import { flag } from "../constants/flags.js";
 import { Logger } from "../utils/logger.js";
+import { generateTagColor } from "../utils/tag-color.js"
 
 export class JournalManager {
     static async getOrCreatePrefabLibrary() {
@@ -19,7 +20,6 @@ export class JournalManager {
     }
 
     static buildLightPrefabV1(lightDocument) {
-        Logger.log("JournalManager.buildLightPrefabV1.lightDocument:", lightDocument);
         if (!(lightDocument instanceof AmbientLightDocument)) {
             Logger.error("Expected AmbientLightDocument");
             return;
@@ -47,7 +47,6 @@ export class JournalManager {
         }
 
         const tileId = lightDocument.getFlag(flag.scope, flag.tileIdName);
-        Logger.log("buildLightPrefabV1.tileId", tileId);
         if (tileId) {
             const tileDocument = scene.tiles.get(tileId);
             if (!tileDocument) {
@@ -64,18 +63,12 @@ export class JournalManager {
             prefabObj.tile.document = tileData;
         }
 
-        Logger.log("buildLightPrefabV1.prefabObj", prefabObj);
         return prefabObj;
     }
 
     static async savePrefab(prefab) {
-        Logger.log("JournalManager.savePrefab.prefab:", prefab);
         const journal = await this.getOrCreatePrefabLibrary();
-        Logger.log("JournalManager.savePrefab.journal:", journal);
-        const prefabs = foundry.utils.deepClone(
-            journal.getFlag(flag.scope, flag.prefabsName) ?? {}
-        )
-        Logger.log("JournalManager.savePrefab.prefabs:", prefabs);
+        const prefabs = this.getPrefabs(journal);
         prefabs[prefab.id] = prefab;
 
         await journal.setFlag(flag.scope, flag.prefabsName, prefabs);
@@ -85,13 +78,72 @@ export class JournalManager {
 
     static async deletePrefab(prefabId) {
         const journal = await this.getOrCreatePrefabLibrary();
+        const prefabs = await this.getPrefabs(journal);
+
+        delete prefabs[prefabId];
+        await journal.unsetFlag(flag.scope, `${flag.prefabsName}.${prefabId}`);
+    }
+
+    static async getAllTags() {
+        const prefabs = await this.getPrefabs();
+        const prefabIds = Object.keys(prefabs);
+        const tags = [];
+        for (let id of prefabIds) {
+            const items = prefabs[id]?.light?.document?.flags?.[flag.scope]?.[flag.prefabTagsName] ?? [];
+            tags.push(...items);
+        }
+        const uniqueTags = tags.filter((v, i, a) => a.indexOf(v) === i).map(tv => {
+            return {
+                value: tv,
+                color: generateTagColor(tv)
+            }
+        });
+        return uniqueTags;
+    }
+
+    // mode: false - light id or doc, true - prefab id
+    // TODO: by light id
+    static async getPrefabTags(id, mode, document) {
+        let tags = [];
+        if (mode) {
+            const prefab = await this.getPrefab(id);
+            tags = prefab?.light?.document?.flags?.[flag.scope]?.[flag.prefabTagsName];
+        }
+
+        if (document) {
+            tags = document.flags?.[flag.scope]?.[flag.prefabTagsName]
+        }
+
+        tags = Array.isArray(tags) ? tags : [tags];
+        tags = tags.map(tv => {
+            return {
+                value: tv,
+                color: generateTagColor(tv)
+            }
+        }) ?? [];
+
+        return tags ?? [];
+    }
+
+    static async getPrefab(prefabId, journal = null) {
+        if (!journal)
+            journal = await this.getOrCreatePrefabLibrary();
+
+        const prefab = foundry.utils.deepClone(
+            journal.getFlag(flag.scope, `${flag.prefabsName}.${prefabId}`) ?? {}
+        )
+
+        return prefab;
+    }
+
+    static async getPrefabs(journal = null) {
+        if (!journal)
+            journal = await this.getOrCreatePrefabLibrary();
+
         const prefabs = foundry.utils.deepClone(
             journal.getFlag(flag.scope, flag.prefabsName) ?? {}
         )
 
-        delete prefabs[prefabId];
-        Logger.log("JournalManager.deletePrefab.prefabs:", prefabs);
-        await journal.unsetFlag(flag.scope, `${flag.prefabsName}.${prefabId}`);
-        Logger.log("JournalManager.deletePrefab.journal prefabs:", journal.getFlag(flag.scope, flag.prefabsName));
+        return prefabs;
     }
 }

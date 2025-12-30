@@ -15,23 +15,21 @@ export class AmbientLightConfig {
     static #filePathInput = "file-path";
     static #inputIdFormat = "${appId}.${flagPath}.${type}";
 
+    tagMultiselect;
+
     //#region trackLightPositionHook
 
-    static trackLightPositionHook = (
+    static trackLightPositionHook = async (
         doc,
         change
     ) => {
-        Logger.log(
+        Logger.info(
             "AmbientLight updated!",
             doc,
-            change,
-            "x" in change,
-            "y" in change,
-            "x" in change || "y" in change
+            change
         );
 
         if ("x" in change || "y" in change) {
-            Logger.log("Light position changed:", change.x, change.y);
 
             const interactive = doc.getFlag(
                 flag.scope,
@@ -39,17 +37,21 @@ export class AmbientLightConfig {
             );
             const tileId = doc.getFlag(flag.scope, flag.tileIdName);
 
-            Logger.log(`tileId: ${tileId}`);
-            if (!interactive || !tileId) return;
-            const ok = LightTextureController.changeTilePositions(
-                tileId,
-                change.x,
-                change.y
-            );
-            if (!ok) {
-                doc.setFlag(flag.scope, flag.tokenIdName, "");
-                doc.setFlag(flag.scope, flag.pathName, "");
+            if (interactive && tileId) {
+                const ok = LightTextureController.changeTilePositions(
+                    tileId,
+                    change.x,
+                    change.y
+                );
+                if (!ok) {
+                    doc.setFlag(flag.scope, flag.tokenIdName, "");
+                    doc.setFlag(flag.scope, flag.pathName, "");
+                }
             }
+        }
+
+        if (change.flags?.[flag.scope]?.[flag.makePrefabName]) {
+            await this.#makePrefab(doc);
         }
     };
 
@@ -62,7 +64,7 @@ export class AmbientLightConfig {
         options,
         userId
     ) => {
-        Logger.log(`AMBIENT LIGHT ${doc.id} WAS DELETED`);
+        Logger.info(`AMBIENT LIGHT ${doc.id} WAS DELETED`);
 
         const tileId = doc.getFlag(flag.scope, flag.tileIdName);
 
@@ -74,7 +76,7 @@ export class AmbientLightConfig {
 
     //#region renderLightConfigHook
 
-    static renderLightConfigHook = (
+    static renderLightConfigHook = async (
         app,
         html,
         context,
@@ -119,13 +121,13 @@ export class AmbientLightConfig {
         interactiveSettingsFieldset.appendChild(pathElement);
         interactiveSettingsFieldset.appendChild(clickOptionsElement);
 
-        const tagMultiselect = this.#createPreafbTagsHtmlElement();
-        
+        this.tagMultiselect = await this.#createPreafbTagsHtmlElement(app);
+
         const prefabSettingsFieldset = this.#createPrefabSettingsFieldsetHtmlElement();
         const prefabName = document.getFlag(flag.scope, flag.prefabName);
         const prefabSettingsPrefabNameFormGroup = this.#createPrefabNameHtmlElement(app.id, prefabName);
         prefabSettingsFieldset.appendChild(prefabSettingsPrefabNameFormGroup);
-        prefabSettingsFieldset.appendChild(tagMultiselect.element);
+        prefabSettingsFieldset.appendChild(this.tagMultiselect.element);
 
         const tabContent = this.#createTabContentHtmlElement(activeTabName);
         tabContent.appendChild(interactiveSettingsFieldset);
@@ -150,6 +152,37 @@ export class AmbientLightConfig {
 
         html.onsubmit = this.#onConfigSubmit;
     };
+
+    static #createTabHtmlElement = (active) => {
+        const link = document.createElement('a');
+        link.dataset.action = "tab";
+        link.dataset.group = "sheet";
+        link.dataset.tab = "interactiveLight";
+        if (active === 'interactiveLight') link.classList.add('active');
+
+        const icon = document.createElement('i');
+        icon.classList.add("fa-solid", "fa-fire-flame-simple");
+        icon.inert = true;
+
+        const title = document.createElement('span');
+        title.innerText = game.i18n.localize(locale.tablName);
+
+        link.appendChild(icon);
+        link.appendChild(title);
+
+        return link;
+    }
+
+    static #createTabContentHtmlElement = (active) => {
+        const section = document.createElement('section');
+        section.classList.add("tab", "standard-form", "scrollable");
+        if (active === "interactiveLight") section.classList.add('active');
+        section.dataset.tab = "interactiveLight";
+        section.dataset.group = "sheet";
+        section.dataset.applicationPart = "interactiveLight";
+
+        return section;
+    }
 
     static #createInteractiveCheckboxHtmlElement = (
         id,
@@ -284,7 +317,7 @@ export class AmbientLightConfig {
     static #createInteractiveSettingsFieldsetHtmlElement = () => {
         const legend = document.createElement('legend');
         legend.textContent = game.i18n.localize(locale.interactiveSettingsLegend);
-        
+
         const fieldset = document.createElement('fieldset');
         fieldset.appendChild(legend);
 
@@ -325,51 +358,26 @@ export class AmbientLightConfig {
 
         return formGroup;
     }
-    
+
     static #createPrefabSettingsFieldsetHtmlElement = () => {
         const legend = document.createElement('legend');
         legend.textContent = game.i18n.localize(locale.prefabSettingsLegend);
-        
+
         const fieldset = document.createElement('fieldset');
         fieldset.appendChild(legend);
-        
+
         return fieldset;
     }
 
-    static #createPreafbTagsHtmlElement = () => {
-        const multiselect = createMultiSelect({ initial: ["tag1", "tag2"], available: ["tag1", "tag2"] });
+    static #createPreafbTagsHtmlElement = async (app) => {
+        const prefabId = app.document.getFlag(flag.scope, flag.prefabIdName);
+        const lightId = app.document.id;
+
+        const prefabTags = await JournalManager.getPrefabTags(prefabId || lightId, prefabId, app.document);
+        const allTags = await JournalManager.getAllTags();
+
+        const multiselect = createMultiSelect({ initial: prefabTags, available: allTags });
         return multiselect;
-    }
-
-    static #createTabHtmlElement = (active) => {
-        const link = document.createElement('a');
-        link.dataset.action = "tab";
-        link.dataset.group = "sheet";
-        link.dataset.tab = "interactiveLight";
-        if (active === 'interactiveLight') link.classList.add('active');
-
-        const icon = document.createElement('i');
-        icon.classList.add("fa-solid", "fa-fire-flame-simple");
-        icon.inert = true;
-
-        const title = document.createElement('span');
-        title.innerText = game.i18n.localize(locale.tablName);
-
-        link.appendChild(icon);
-        link.appendChild(title);
-
-        return link;
-    }
-
-    static #createTabContentHtmlElement = (active) => {
-        const section = document.createElement('section');
-        section.classList.add("tab", "standard-form", "scrollable");
-        if (active === "interactiveLight") section.classList.add('active');
-        section.dataset.tab = "interactiveLight";
-        section.dataset.group = "sheet";
-        section.dataset.applicationPart = "interactiveLight";
-
-        return section;
     }
 
     static #createMakePrefabButton = () => {
@@ -386,7 +394,6 @@ export class AmbientLightConfig {
         const activeTab = this.#checkInteractiveLightTabActive(html);
         const makePrefabBtn = this.#getMakePrefabButton(html);
         makePrefabBtn.hidden = !activeTab;
-        Logger.log("#updateMakePrefabButtonVisibility:", activeTab, makePrefabBtn);
     }
 
     static #onInteractiveCheckboxChanged = (ev) => {
@@ -425,7 +432,7 @@ export class AmbientLightConfig {
     };
 
     static #onConfigSubmit = async (ev) => {
-        Logger.log("AMBIENT LIGHT CONFIGURATION SUBMITTED:", ev);
+        Logger.info("AMBIENT LIGHT CONFIGURATION SUBMITTED:", ev);
 
         const interactiveChk = this.#getInteractiveCheckbox(
             ev.target
@@ -453,29 +460,29 @@ export class AmbientLightConfig {
                 path
             );
             if (!changed) {
-                Logger.log("CREATING TILE");
-                LightTextureController.createTile(
+                Logger.info("CREATING TILE");
+                await LightTextureController.createTile(
                     path,
                     ambientLight.position._x,
                     ambientLight.position._y,
                     ambientLight.document
-                ).then((tileDoc) => {
-                    Logger.log("DATA", tileDoc);
-                });
+                );
             }
         } else {
-            LightTextureController.delete(tileId, ambientLight.document);
+            await LightTextureController.delete(tileId, ambientLight.document);
         }
 
-        Logger.log("#onConfigSubmit.ev.submitter.name:", ev.submitter.name);
+        // await ambientLight.document.setFlag(flag.scope, flag.prefabTagsName, this.tagMultiselect.getValue());
+
         if (ev.submitter.name === locale.makePrefabButton) {
-            Logger.log("#onConfigSubmit: making prefab...");
-            await this.#makePrefab(ambientLight.document);
+            await ambientLight.document.setFlag(flag.scope, flag.makePrefabName, true);
+            await ambientLight.document.unsetFlag(flag.scope, flag.makePrefabName);
         }
     };
 
     static #makePrefab = async (lightDocument) => {
         const prefab = JournalManager.buildLightPrefabV1(lightDocument);
+        await lightDocument.setFlag(flag.scope, flag.prefabIdName, prefab.id);
         await JournalManager.savePrefab(prefab);
     }
 
@@ -493,8 +500,6 @@ export class AmbientLightConfig {
 
     static #checkInteractiveLightTabActive = (html) => {
         const interactiveTab = html.querySelector(`.tabs a.active[data-tab="interactiveLight"]`);
-        Logger.log("#checkInteractiveLightTabActive.html:", html);
-        Logger.log("#checkInteractiveLightTabActive.interactiveTab:", interactiveTab);
         return interactiveTab != null;
     }
 

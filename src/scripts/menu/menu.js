@@ -4,12 +4,10 @@ import { openLightPrefabBrowser } from "../prefab-window/light-prefab-browser-wi
 
 export class Menu {
     static registerMenu(controls) {
-        Logger.log(controls);
         if (!controls) return;
         const lighting = controls.lighting;
         if (!lighting) return;
 
-        Logger.log(game.i18n.localize(locale.menuPrefabsLabel));
         lighting.tools.prefabs = {
             name: 'prefabs',
             title: game.i18n.localize(locale.menuPrefabsLabel),

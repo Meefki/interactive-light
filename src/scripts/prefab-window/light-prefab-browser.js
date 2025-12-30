@@ -54,13 +54,11 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         super._onRender(context, options);
 
         const scroller = this.element?.querySelector(".prefab-container");
-        Logger.log("_onRender.scroller:", scroller, "app.__scrollTop:", this.__scrollTop);
         if (scroller && this.__scrollTop) {
             scroller.scrollTop = this.__scrollTop;
         }
 
         const searchInput = this.element?.querySelector('input[data-action="search"]');
-        Logger.log('_onRender.searchInput', searchInput);
         if (searchInput) {
             searchInput.addEventListener("input", (event) => {
                 this.#search(event);
@@ -73,7 +71,7 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
             ...await super._prepareContext(context)
         };
         this.__prefabs = await this.__getPrefabs() ?? [];
-        this.__allTags = this.#getAllTags() ?? [];
+        this.__allTags = await this.#getAllTags() ?? [];
         return _context;
     }
 
@@ -93,9 +91,8 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
     }
 
     async _prepareHeaderTagsContext(context, options) {
-        context.allTags = this.__allTags = this.#getAllTags() ?? [];
+        context.allTags = this.__allTags = await this.#getAllTags() ?? [];
         context.activeTags = this.__activeTags;
-        Logger.log("_prepareHeaderTagsContext:");
         return context;
     }
 
@@ -105,12 +102,10 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         context.selectedPrefabId = this.__activePrefab ?? "";
 
         if (!this.__filteredPrefabs.map(fp => fp.id).includes(this.__activePrefab)) this.__activePrefab = "";
-        Logger.log("_prepareContentContext:", (this.__filteredPrefabs ?? []).map(fp => fp.id), this.__activePrefab, options);
         return context;
     }
 
     static #onPrefabClick(event, target) {
-        Logger.log("onPrefabClick:", event, target);
         if (event.altKey) {
             event.preventDefault();
             this.__openSettings(target);
@@ -119,25 +114,20 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
     }
 
     static __openSettings(target) {
-        Logger.log("openSettings:", target);
         // TODO: ...
         throw "Method Not Implemented";
     }
 
     __selectPrefab(target) {
-        Logger.log("selectPrefab:", target);
         if (this.__activePrefab === target.dataset.id) {
             this.__activePrefab = null;
             target.checked = false;
         } else {
             this.__activePrefab = target.dataset.id;
         }
-
-        Logger.log("selectPrefab.__activePrefab:", this.__activePrefab);
     }
 
     static async #deletePrefab(event, target) {
-        Logger.log("#deletePrefab.__activePrefab:", this.__activePrefab);
         if (!this.__activePrefab) return;
         await JournalManager.deletePrefab(this.__activePrefab);
         this.__activePrefab = null;
@@ -145,29 +135,24 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
     }
 
     static #onTagClick(event, target) {
-        Logger.log("onTagClick:", event, target);
         if (!this.__activeTags) this.__activeTags = [];
 
         const app = this;
 
         const scroller = app.element?.querySelector(".prefab-container");
-        Logger.log("#onTagClick.app:", app, "scroller:", scroller);
         if (scroller) {
-            Logger.log("#onTagClick.scroller.scrollTop:", scroller.scrollTop);
             app.__scrollTop = scroller.scrollTop;
         }
 
         if (this.__activeTags.filter(at => at.value === target.dataset.id).length) {
             // exists
             this.__activeTags = this.__activeTags.filter(at => at.value !== target.dataset.id)
-            Logger.log("selectTag: tag exists, removed", this.__activeTags);
         }
         else {
             // new
             try {
                 const tag = this.__allTags.filter(at => at.value === target.dataset.id)[0];
                 this.__activeTags.push(tag);
-                Logger.log("selectTag: new tag, added", this.__activeTags);
             } catch (e) {
                 Logger.error("#onTagClick:", "Unable to retrieve and add tag to the filter");
             }
@@ -177,9 +162,7 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
     }
 
     #search(event) {
-        Logger.log("#search.event:", event);
         const value = event?.target?.value ?? "";
-        Logger.log("#search.event.target.value:", value, this.__search);
         if (this.__search === value) return;
 
         this.__search = value
@@ -187,7 +170,6 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
     }
 
     static #clearFilters(event, target) {
-        Logger.log("#clearFilters:", event, target);
         this.__search = "";
         this.__activeTags = [];
 
@@ -199,41 +181,28 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
         throw "Method Not Implemented";
     }
 
-    #getAllTags() {
-        const tagMap = new Map();
-
-        Logger.log("#getAllTags.__prefabs:", this.__prefabs);
-        for (const prefab of this.__prefabs) {
-            for (const tag of prefab.tags) {
-                if (!tagMap.has(tag.value)) {
-                    tagMap.set(tag.value, tag);
-                }
-            }
-        }
-
-        return [...tagMap.values()];
+    async #getAllTags() {
+        const tags = await JournalManager.getAllTags();
+        return tags;
     }
 
     async __getPrefabs() {
-        const journal = await JournalManager.getOrCreatePrefabLibrary();
-        Logger.log("__getPrefabs.journal:", journal);
-        const prefabs = journal.getFlag(flag.scope, flag.prefabsName) ?? {};
-        Logger.log("__getPrefabs.prefabViews.prefabs:", prefabs);
-        const prefabViews = Object.values(prefabs).map(p => {
-            return {
+        const prefabs = Object.values(await JournalManager.getPrefabs());
+        const prefabViews = await Promise.all(prefabs.map(async (p) => {
+            const tags = await JournalManager.getPrefabTags(null, false, p.light.document);
+            const prefabView = {
                 id: p.id,
                 preview: p.tile?.document?.texture?.src ?? "",
                 name: p.name,
-                tags: []
+                tags: tags
             }
-        });
+            return prefabView;
+        }));
 
-        Logger.log("__getPrefabs.prefabViews:", prefabViews);
         return prefabViews;
     }
 
     __filterPrefabs(prefabs, textSearch, tags) {
-        Logger.log("__filterPrefabs:", prefabs, textSearch, tags);
         this.__filteredPrefabs = [...prefabs];
         if (textSearch && textSearch.length) {
             const q = textSearch.trim().toLowerCase();
@@ -242,15 +211,12 @@ export class LightPrefabBrowserV2 extends HandlebarsApplicationMixin(
                     const words = q.split(/\s+/);
                     return words.every(word => p.name.toLowerCase().includes(word));
                 });
-                Logger.log("__filterPrefabs.this.__filteredPrefabs (text):", this.__filteredPrefabs);
             }
         }
 
         if (tags && tags.length) {
             const tagsValueSet = new Set(tags.map(t => t.value));
-            Logger.log("__filterPrefabs.tagsValueSet (tags):", tagsValueSet);
             this.__filteredPrefabs = this.__filteredPrefabs.filter(p => p.tags.some(t => tagsValueSet.has(t.value)));
-            Logger.log("__filterPrefabs.this.__filteredPrefabs (tags):", this.__filteredPrefabs);
         }
 
         return this.__filteredPrefabs;
