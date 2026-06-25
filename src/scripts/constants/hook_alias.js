@@ -7,5 +7,7 @@ export const deleteToken = 'deleteToken';
 export const deleteTile = 'deleteTile';
 export const renderLightingSidebar = 'renderLightingSidebar';
 export const getSceneControlButtons = 'getSceneControlButtons';
+export const createAmbientLight = 'createAmbientLight';
+export const preCreateAmbientLight = 'preCreateAmbientLight';
 
 export * as hook_alias from './hook_alias.js';

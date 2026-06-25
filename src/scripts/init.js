@@ -11,7 +11,7 @@ import { preloadTemplates } from "../templates/preloadTemplates.js";
 
 export function proceed() {
     Logger.info("Init Hooks");
-    
+
     Hooks.once(hook_alias.init, (data) => {
         if (LibManager.moduleDepsCheck()) return;
 
@@ -31,20 +31,21 @@ class Initializer {
             hook_alias.renderAmbientLightConfig,
             AmbientLightConfig.renderLightConfigHook
         );
+        Hooks.on(hook_alias.createAmbientLight, AmbientLightConfig.createAmbientLight);
         Hooks.on(hook_alias.updateAmbientLight, AmbientLightConfig.trackLightPositionHook);
         Hooks.on(hook_alias.deleteAmbientLight, AmbientLightConfig.deleteAmbientLightHook);
         Hooks.on(hook_alias.canvasReady, settings.initSettings);
         Hooks.on(hook_alias.getSceneControlButtons, Menu.registerMenu);
     }
-    
+
     static __initApp(data) {
         TileInteractionManager.AddClickHandlers();
         PermissionManager.init();
     }
-    
+
     static __initHelpers(data) {
         registedHelpers();
-    }    
+    }
 }
 
 export * as init from "./init.js";

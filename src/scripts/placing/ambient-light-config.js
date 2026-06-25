@@ -74,6 +74,28 @@ export class AmbientLightConfig {
 
     //#endregion
 
+    //#region createAmbientLight
+
+    static createAmbientLight = async (
+        doc,
+        options,
+        userId
+    ) => {
+        Logger.log(doc);
+        doc.updateSource({
+            [`flags.${flag.scope}.-=${flag.tileIdName}`]: null
+        });
+        Logger.log(doc.flags[flag.scope][flag.pathName]);
+        await LightTextureController.createTile(
+            doc.flags[flag.scope][flag.pathName],
+            doc.x,
+            doc.y,
+            doc
+        );
+    }
+
+    //#endregion
+
     //#region renderLightConfigHook
 
     static renderLightConfigHook = async (
