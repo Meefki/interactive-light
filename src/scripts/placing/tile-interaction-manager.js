@@ -153,7 +153,7 @@ export class TileInteractionManager {
                     return true;
                 } catch (err) {
                     Logger.error("Toggle failed", err);
-                    ui.notifications?.error?.("Interactive-Light: ошибка переключения света. Проверьте логи.");
+                    ui.notifications?.error?.("Interactive-Light: Light switch error. Check logs.");
                 }
             }
         } catch (err) {

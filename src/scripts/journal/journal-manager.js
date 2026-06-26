@@ -1,4 +1,5 @@
 import { flag } from "../constants/flags.js";
+import { lightPrefabLibraryJournalName } from "../constants/settings.js";
 import { Logger } from "../utils/logger.js";
 import { generateTagColor } from "../utils/tag-color.js"
 
@@ -9,7 +10,7 @@ export class JournalManager {
         if (journal) return journal;
 
         return JournalEntry.create({
-            name: "Light Prefab Library",
+            name: lightPrefabLibraryJournalName,
             flags: {
                 [flag.scope]: {
                     prefabLibrary: true,

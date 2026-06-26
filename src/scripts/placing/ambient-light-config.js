@@ -17,13 +17,13 @@ export class AmbientLightConfig {
 
     tagMultiselect;
 
-    //#region trackLightPositionHook
+    //#region trackLightChangesHook
 
-    static trackLightPositionHook = async (
+    static trackLightChangesHook = async (
         doc,
         change
     ) => {
-        Logger.info(
+        Logger.log(
             "AmbientLight updated!",
             doc,
             change
@@ -50,7 +50,7 @@ export class AmbientLightConfig {
             }
         }
 
-        if (change.flags?.[flag.scope]?.[flag.makePrefabName]) {
+        if (change.flags?.[flag.scope]?.[flag.makePrefabName] != null) {
             await this.#makePrefab(doc);
         }
     };
@@ -67,7 +67,7 @@ export class AmbientLightConfig {
         Logger.info(`AMBIENT LIGHT ${doc.id} WAS DELETED`);
 
         const tileId = doc.getFlag(flag.scope, flag.tileIdName);
-
+        Logger.log(tileId);
         if (!tileId) return;
         await LightTextureController.delete(tileId, null);
     };
@@ -82,10 +82,11 @@ export class AmbientLightConfig {
         userId
     ) => {
         Logger.log(doc);
+        if (!doc.flags[flag.scope] || !doc.flags[flag.scope][flag.pathName]) return;
+
         doc.updateSource({
             [`flags.${flag.scope}.-=${flag.tileIdName}`]: null
         });
-        Logger.log(doc.flags[flag.scope][flag.pathName]);
         await LightTextureController.createTile(
             doc.flags[flag.scope][flag.pathName],
             doc.x,
@@ -445,8 +446,7 @@ export class AmbientLightConfig {
                 appId: appId,
                 flagPath: flag.clickOptions,
                 type: "form-group"
-            }
-            )
+            })
         )
 
         if (pathFormGroup) pathFormGroup.hidden = !checked;
@@ -494,11 +494,9 @@ export class AmbientLightConfig {
             await LightTextureController.delete(tileId, ambientLight.document);
         }
 
-        // await ambientLight.document.setFlag(flag.scope, flag.prefabTagsName, this.tagMultiselect.getValue());
-
         if (ev.submitter.name === locale.makePrefabButton) {
-            await ambientLight.document.setFlag(flag.scope, flag.makePrefabName, true);
-            await ambientLight.document.unsetFlag(flag.scope, flag.makePrefabName);
+            await ambientLight.document.setFlag(flag.scope, flag.makePrefabName, !ambientLight.document.flags[flag.scope]?.[flag.makePrefabName]);
+            Logger.log("AmbientLight makePrefab flag has been set:", ambientLight.document);
         }
     };
 

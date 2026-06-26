@@ -9,5 +9,6 @@ export const renderLightingSidebar = 'renderLightingSidebar';
 export const getSceneControlButtons = 'getSceneControlButtons';
 export const createAmbientLight = 'createAmbientLight';
 export const preCreateAmbientLight = 'preCreateAmbientLight';
+export const updateJournalEntry = 'updateJournalEntry';
 
 export * as hook_alias from './hook_alias.js';

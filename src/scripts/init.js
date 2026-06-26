@@ -8,6 +8,7 @@ import { registedHelpers } from "./utils/hbs-helpers.js";
 import { TileInteractionManager } from "./placing/tile-interaction-manager.js"
 import { PermissionManager } from "./placing/permission-manager.js";
 import { preloadTemplates } from "../templates/preloadTemplates.js";
+import { onUpdateJournalEntryHook } from "./prefab-window/light-prefab-browser-window.js";
 
 export function proceed() {
     Logger.info("Init Hooks");
@@ -32,8 +33,9 @@ class Initializer {
             AmbientLightConfig.renderLightConfigHook
         );
         Hooks.on(hook_alias.createAmbientLight, AmbientLightConfig.createAmbientLight);
-        Hooks.on(hook_alias.updateAmbientLight, AmbientLightConfig.trackLightPositionHook);
+        Hooks.on(hook_alias.updateAmbientLight, AmbientLightConfig.trackLightChangesHook);
         Hooks.on(hook_alias.deleteAmbientLight, AmbientLightConfig.deleteAmbientLightHook);
+        Hooks.on(hook_alias.updateJournalEntry, onUpdateJournalEntryHook);
         Hooks.on(hook_alias.canvasReady, settings.initSettings);
         Hooks.on(hook_alias.getSceneControlButtons, Menu.registerMenu);
     }

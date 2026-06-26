@@ -83,11 +83,6 @@ export class PrefabPlacement {
         tileData.y = pos.y - tileData.height / 2;
         tileData.rotation = rotation * (180 / Math.PI);
 
-        const [tile] = await canvas.scene.createEmbeddedDocuments(
-            "Tile",
-            [tileData]
-        );
-
         const lightData = foundry.utils.deepClone(prefab.light.document);
         lightData.x = pos.x;
         lightData.y = pos.y;
@@ -96,9 +91,6 @@ export class PrefabPlacement {
             "AmbientLight",
             [lightData]
         );
-
-        await tile.setFlag(flag.scope, flag.lightIdName, light.id);
-        await light.setFlag(flag.scope, flag.tileIdName, tile.id);
     }
 
     static stop() {
